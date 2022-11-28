@@ -1,32 +1,50 @@
+using System.Reflection;
+using AZChat.Models;
+using AZChat.Services.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace AZChat
 {
-    public class Program
+    public static class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss.fff} {Level}] {Message:lj}{NewLine}{Exception}")
-                .CreateLogger();
+            ConfigureLogging();
 
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddLogging(loggingBuilder =>
             {
                 loggingBuilder.ClearProviders();
                 loggingBuilder.AddSerilog();
             });
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            if (builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=db.sqlite"));
+                builder.Services.AddCors();
+            }
+            else
+            {
+
+            }
+
+            builder.Services
+                .AddIdentity<User, IdentityRole>(identityOptions =>
+                {
+                })
+                .AddEntityFrameworkStores<AppDbContext>();
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddCors();
+
             builder.Services.AddSpaStaticFiles(options => options.RootPath = "public");
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -36,8 +54,8 @@ namespace AZChat
                 app.UseCors(cors => cors.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             }
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 
@@ -46,7 +64,21 @@ namespace AZChat
             app.UseSpaStaticFiles();
             app.UseSpa(spa => { });
 
-            app.Run();
+            using (var scope = app.Services.CreateScope())
+            {
+                AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await dbContext.Database.MigrateAsync();
+            }
+
+            await app.RunAsync();
+        }
+
+        private static void ConfigureLogging()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss.fff} {Level}] {Message:lj}{NewLine}{Exception}")
+                .CreateLogger();
         }
     }
 }
