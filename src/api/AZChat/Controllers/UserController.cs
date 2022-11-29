@@ -38,7 +38,7 @@ public class UserController : ControllerBase
         if (errors.Any())
         {
             response.Errors = errors;
-            _logger.LogInformation("There were errors while creating a user: {@errors}", errors);
+            _logger.LogInformation("There were errors while creating a user: {@errors}", errors); // TODO need to log?
             return BadRequest(response);
         }
         else
