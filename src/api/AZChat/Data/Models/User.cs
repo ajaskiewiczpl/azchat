@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace AZChat.Models;
+namespace AZChat.Data.Models;
 
 public class User : IdentityUser
 {
