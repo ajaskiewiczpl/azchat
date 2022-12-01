@@ -7,6 +7,7 @@ using AZChat.Services.Authentication;
 using AZChat.Services.Data;
 using AZChat.Services.HealthChecks;
 using AZChat.Services.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -26,6 +27,20 @@ namespace AZChat
         {
             ConfigureLogging();
 
+            WebApplicationBuilder builder = GetWebApplicationBuilder(args);
+            WebApplication app = builder.Build();
+
+            app.Logger.LogInformation("Web app created");
+
+            await ConfigureApp(app);
+
+            app.Logger.LogInformation("Web app configured, starting up");
+
+            await app.RunAsync();
+        }
+
+        private static WebApplicationBuilder GetWebApplicationBuilder(string[] args)
+        {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             IConfiguration authConfig = builder.Configuration.GetSection(AuthenticationConfiguration.SectionName);
@@ -49,17 +64,19 @@ namespace AZChat
             }
             else
             {
-
             }
-            
+
             builder.Services
-                .AddIdentity<User, IdentityRole>(identityOptions =>
-                {
-                })
+                .AddIdentity<User, IdentityRole>(identityOptions => { })
                 .AddEntityFrameworkStores<AppDbContext>();
 
             builder.Services
-                .AddAuthentication("Bearer")
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new()
@@ -69,7 +86,9 @@ namespace AZChat
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = authConfig[nameof(AuthenticationConfiguration.Issuer)],
                         ValidAudience = authConfig[nameof(AuthenticationConfiguration.Audience)],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(authConfig[nameof(AuthenticationConfiguration.Secret)]))
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(
+                                Encoding.ASCII.GetBytes(authConfig[nameof(AuthenticationConfiguration.Secret)]))
                     };
                 });
 
@@ -86,18 +105,19 @@ namespace AZChat
                     IServerAddressesFeature? addresses = server?.Features.Get<IServerAddressesFeature>();
                     client.BaseAddress = new Uri(addresses?.Addresses.FirstOrDefault() ?? string.Empty);
                 })
-                .AddTransientHttpErrorPolicy(policyBuilder => policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(2), 3)));
+                .AddTransientHttpErrorPolicy(policyBuilder =>
+                    policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(2), 3)));
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddSpaStaticFiles(options => options.RootPath = "public");
+            return builder;
+        }
 
-            WebApplication app = builder.Build();
-
-            app.Logger.LogInformation("Web app created");
-
+        private static async Task ConfigureApp(WebApplication app)
+        {
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -132,24 +152,20 @@ namespace AZChat
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapHealthChecks(ApiHealthCheck.Name);
-            app.MapControllers();
-
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
             app.UseSpa(spa => { });
-            
+
+            app.MapHealthChecks(ApiHealthCheck.Name);
+            app.MapControllers();
+
             app.Logger.LogInformation("Migrating database schema");
             using (var scope = app.Services.CreateScope())
             {
                 AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await dbContext.Database.MigrateAsync();
             }
-
-            app.Logger.LogInformation("Web app configured, starting up");
-
-            await app.RunAsync();
         }
 
         private static void ConfigureLogging()

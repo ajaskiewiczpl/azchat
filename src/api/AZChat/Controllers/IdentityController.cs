@@ -13,15 +13,13 @@ namespace AZChat.Controllers;
 public class IdentityController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
     private readonly IAuthTokenService _authTokenService;
     private readonly IMapper _mapper;
     private readonly ILogger<IdentityController> _logger;
 
-    public IdentityController(UserManager<User> userManager, SignInManager<User> signInManager, IAuthTokenService authTokenService, IMapper mapper, ILogger<IdentityController> logger)
+    public IdentityController(UserManager<User> userManager, IAuthTokenService authTokenService, IMapper mapper, ILogger<IdentityController> logger)
     {
         _userManager = userManager;
-        _signInManager = signInManager;
         _authTokenService = authTokenService;
         _mapper = mapper;
         _logger = logger;
@@ -60,15 +58,21 @@ public class IdentityController : ControllerBase
         {
             return BadRequest();
         }
-        
-        Microsoft.AspNetCore.Identity.SignInResult result = await _signInManager.PasswordSignInAsync(request.UserName, request.Password, isPersistent: true, lockoutOnFailure: false);
 
-        if (!result.Succeeded)
+        User? user = await _userManager.Users.SingleOrDefaultAsync(x => string.Equals(x.UserName, request.UserName));
+
+        if (user == null)
+        {
+            return BadRequest();
+        }
+
+        bool isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+
+        if (!isPasswordValid)
         {
             return Unauthorized();
         }
         
-        User user = await _userManager.Users.SingleAsync(x => string.Equals(x.UserName, request.UserName));
         string authToken = await _authTokenService.GetAuthTokenAsync(user);
         return Ok(authToken);
     }
