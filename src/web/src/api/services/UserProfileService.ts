@@ -4,18 +4,18 @@
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 
-export class HealthService {
+export class UserProfileService {
 
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
-     * @returns boolean Success
+     * @returns any Success
      * @throws ApiError
      */
-    public getApiHealthCheck(): CancelablePromise<boolean> {
+    public getApiUserProfile(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/api/Health/check',
+            url: '/api/UserProfile',
         });
     }
 

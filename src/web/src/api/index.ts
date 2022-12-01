@@ -9,4 +9,9 @@ export { CancelablePromise, CancelError } from './core/CancelablePromise';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
-export { HealthService } from './services/HealthService';
+export type { IdentityError } from './models/IdentityError';
+export type { RegisterUserResponseDto } from './models/RegisterUserResponseDto';
+export type { UserBaseRequestDto } from './models/UserBaseRequestDto';
+
+export { IdentityService } from './services/IdentityService';
+export { UserProfileService } from './services/UserProfileService';
