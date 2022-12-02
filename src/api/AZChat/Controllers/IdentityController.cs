@@ -63,7 +63,7 @@ public class IdentityController : ControllerBase
 
         if (user == null)
         {
-            return BadRequest();
+            return Unauthorized();
         }
 
         bool isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);

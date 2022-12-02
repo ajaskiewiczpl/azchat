@@ -2,13 +2,10 @@ import { GeneratedApiClient } from "./GeneratedApiClient";
 
 export class ApiClient extends GeneratedApiClient {
     
-    static GetBaseUrl() {
-        return import.meta.env.REACT_APP_API_ENDPOINT || window.location.origin;
-    }
-
     constructor() {
+        let apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
         super({
-            BASE: import.meta.env.REACT_APP_API_ENDPOINT || window.location.origin
+            BASE: apiUrl
         });
     }
 }
