@@ -100,9 +100,7 @@ export default function SignInPage() {
                     </LoadingButton>
                     <Grid container>
                         <Grid item xs>
-                            <Link to={`/signup`}>
-                                Don't have an account? Sign Up
-                            </Link>
+                            <Button component={Link} to={"/signup"}>Don't have an account? Sign Up</Button>
                         </Grid>
                     </Grid>
                 </Box>
