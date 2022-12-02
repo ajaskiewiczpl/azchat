@@ -1,7 +1,9 @@
 import { Alert, Avatar, Button, Card, Grid, Snackbar, TextField, Typography } from "@mui/material";
+import LoadingButton from '@mui/lab/LoadingButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import SendIcon from '@mui/icons-material/Send';
 import { Box, Container } from "@mui/system";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import SignUpPage from "./SignUpPage";
 import { ApiClient } from "../api/ApiClient";
@@ -11,6 +13,11 @@ export default function SignInPage() {
 
     const api = new ApiClient();
 
+    let [errorMessage, setError] = useState('');
+    let [loading, setLoading] = useState(false);
+
+    const isErrorVisible = errorMessage.length > 0;
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -18,13 +25,31 @@ export default function SignInPage() {
         const userName = data.get('userName')?.toString() || "";
         const password = data.get('password')?.toString() || "";
         try {
+            setLoading(true);
+            setError('');
             let jwtToken = await api.identity.postApiIdentitySignin({
                 userName: userName,
                 password: password
             });
         }
         catch (error: any) {
-            alert(error);
+            let exception = error as ApiError;
+            let msg;
+            switch (exception.status) {
+                case 401:
+                    msg = "Incorrect user name or password";
+                    break;
+                case 500:
+                    msg = "Server error, please try again"
+                    break;
+                default:
+                    msg = "Unknown error, please try again"
+                    break;
+            }
+            setError(msg);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -42,6 +67,7 @@ export default function SignInPage() {
                 <Typography component="h1">
                     Sign In
                 </Typography>
+                <Alert severity="error" sx={{ mt: 2, display: isErrorVisible ? "flex" : "none" }}>{errorMessage}</Alert>
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"
@@ -61,18 +87,21 @@ export default function SignInPage() {
                         type="password"
                         autoComplete="current-password"
                     />
-                    <Button
+                    <LoadingButton
                         type="submit"
                         fullWidth
+                        endIcon={<SendIcon />}
+                        loadingPosition="end"
+                        loading={loading}
                         variant="contained"
                         sx={{ mt: 3, mb: 2 }}
                     >
                         Sign In
-                    </Button>
+                    </LoadingButton>
                     <Grid container>
                         <Grid item xs>
                             <Link to={`/signup`}>
-                                {"Don't have an account? Sign Up"}
+                                Don't have an account? Sign Up
                             </Link>
                         </Grid>
                     </Grid>
