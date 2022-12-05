@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Serilog;
@@ -53,8 +54,8 @@ namespace AZChat
             });
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            builder.Services.AddTransient<IDateTime, SystemDateTime>();
-            builder.Services.AddTransient<IAuthTokenService, JwtAuthTokenService>();
+            builder.Services.AddScoped<IDateTime, SystemDateTime>();
+            builder.Services.AddScoped<IAuthTokenService, JwtAuthTokenService>();
 
             if (builder.Environment.IsDevelopment())
             {
@@ -79,8 +80,10 @@ namespace AZChat
                 })
                 .AddJwtBearer(options =>
                 {
+                    options.SaveToken = true;
                     options.TokenValidationParameters = new()
                     {
+                        ValidateLifetime = true,
                         ValidateIssuer = true,
                         ValidateAudience = true,
                         ValidateIssuerSigningKey = true,
@@ -110,7 +113,33 @@ namespace AZChat
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(x =>
+            {
+                x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Description = "JWT Auth",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT"
+                });
+
+                x.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme()
+                        {
+                            Reference = new OpenApiReference()
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new List<string>()
+                    }
+                });
+            });
 
             builder.Services.AddSpaStaticFiles(options => options.RootPath = "public");
             return builder;
