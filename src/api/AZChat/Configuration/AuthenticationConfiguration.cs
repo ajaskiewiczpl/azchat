@@ -10,5 +10,5 @@ public class AuthenticationConfiguration
 
     public string Audience { get; set; } = null!;
 
-    public int ExpireDays { get; set; }
+    public TimeSpan TokenLifetime { get; set; }
 }

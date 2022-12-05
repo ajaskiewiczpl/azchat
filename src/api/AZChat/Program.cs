@@ -56,6 +56,7 @@ namespace AZChat
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddScoped<IDateTime, SystemDateTime>();
             builder.Services.AddScoped<IAuthTokenService, JwtAuthTokenService>();
+            builder.Services.AddScoped<IIdentityService, IdentityService>();
 
             if (builder.Environment.IsDevelopment())
             {
@@ -71,6 +72,22 @@ namespace AZChat
                 .AddIdentity<User, IdentityRole>(identityOptions => { })
                 .AddEntityFrameworkStores<AppDbContext>();
 
+            TokenValidationParameters tokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateLifetime = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = authConfig[nameof(AuthenticationConfiguration.Issuer)],
+                ValidAudience = authConfig[nameof(AuthenticationConfiguration.Audience)],
+                ClockSkew = TimeSpan.Zero,
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.ASCII.GetBytes(authConfig[nameof(AuthenticationConfiguration.Secret)]))
+            };
+
+            builder.Services.AddSingleton(tokenValidationParameters);
+
             builder.Services
                 .AddAuthentication(options =>
                 {
@@ -81,18 +98,8 @@ namespace AZChat
                 .AddJwtBearer(options =>
                 {
                     options.SaveToken = true;
-                    options.TokenValidationParameters = new()
-                    {
-                        ValidateLifetime = true,
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = authConfig[nameof(AuthenticationConfiguration.Issuer)],
-                        ValidAudience = authConfig[nameof(AuthenticationConfiguration.Audience)],
-                        IssuerSigningKey =
-                            new SymmetricSecurityKey(
-                                Encoding.ASCII.GetBytes(authConfig[nameof(AuthenticationConfiguration.Secret)]))
-                    };
+                    
+                    options.TokenValidationParameters = tokenValidationParameters;
                 });
 
             builder.Services.AddAuthorization();

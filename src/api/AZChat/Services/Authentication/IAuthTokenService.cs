@@ -1,8 +1,9 @@
 ﻿using AZChat.Data.Models;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AZChat.Services.Authentication;
 
 public interface IAuthTokenService
 {
-    Task<string> GetAuthTokenAsync(User user);
+    Task<SecurityToken> GetAuthTokenAsync(User user);
 }

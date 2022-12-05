@@ -21,29 +21,33 @@ public class JwtAuthTokenService : IAuthTokenService
         _dateTime = dateTime;
     }
 
-    public Task<string> GetAuthTokenAsync(User user)
+    public Task<SecurityToken> GetAuthTokenAsync(User user)
     {
+        JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+
         SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_authConfig.Value.Secret));
         SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        DateTime expires = _dateTime.Now.AddDays(_authConfig.Value.ExpireDays);
+
+        DateTime expires = _dateTime.UtcNow.Add(_authConfig.Value.TokenLifetime);
 
         List<Claim> claims = new List<Claim>()
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id),
+            new(JwtRegisteredClaimNames.Sub, user.UserName),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Name, user.UserName)
+            new(JwtRegisteredClaimNames.Name, user.UserName),
+            new(CustomClaims.UserIdClaim, user.Id)
         };
 
-        JwtSecurityToken token = new JwtSecurityToken(
-            issuer: _authConfig.Value.Issuer,
-            audience: _authConfig.Value.Audience,
-            claims: claims,
-            expires: expires,
-            signingCredentials: credentials
-        );
+        SecurityTokenDescriptor tokenDescriptor = new()
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = expires,
+            SigningCredentials = credentials,
+            Issuer = _authConfig.Value.Issuer,
+            Audience = _authConfig.Value.Audience
+        };
 
-        string tokenStr = new JwtSecurityTokenHandler().WriteToken(token);
-        return Task.FromResult(tokenStr);
+        SecurityToken? token = tokenHandler.CreateToken(tokenDescriptor);
+        return Task.FromResult(token);
     }
 }

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AZChat.Services.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace AZChat.Controllers;
 
@@ -11,6 +13,7 @@ public class UserProfileController : ControllerBase
     [HttpGet()]
     public async Task<ActionResult> GetProfile()
     {
-        return Ok(User.Identity.Name);
+        string userId = User.Claims.Single(x => x.Type == CustomClaims.UserIdClaim).Value;
+        return Ok(userId);
     }
 }

@@ -1,10 +1,7 @@
-﻿using AutoMapper;
-using AZChat.Data.DTOs;
-using AZChat.Data.Models;
+﻿using AZChat.Data.DTOs;
 using AZChat.Services.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AZChat.Controllers;
 
@@ -12,68 +9,88 @@ namespace AZChat.Controllers;
 [Route("api/[controller]")]
 public class IdentityController : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IAuthTokenService _authTokenService;
-    private readonly IMapper _mapper;
+    private readonly IIdentityService _identityService;
     private readonly ILogger<IdentityController> _logger;
 
-    public IdentityController(UserManager<User> userManager, IAuthTokenService authTokenService, IMapper mapper, ILogger<IdentityController> logger)
+    public IdentityController(IIdentityService identityService, ILogger<IdentityController> logger)
     {
-        _userManager = userManager;
-        _authTokenService = authTokenService;
-        _mapper = mapper;
+        _identityService = identityService;
         _logger = logger;
+        _identityService = identityService;
     }
 
     [HttpPost("signup")]
-    public async Task<ActionResult<RegisterUserResponseDto>> SignUp(UserBaseRequestDto baseRequest)
+    public async Task<ActionResult<AuthenticationResponseDto>> SignUp(UserBaseRequestDto request)
     {
+        AuthenticationResponseDto response = new();
+
         if (!ModelState.IsValid)
         {
+            response.Errors = ModelState.Values.SelectMany(x => x.Errors.Select(y => new IdentityError()
+            {
+                Description = y.ErrorMessage
+            })).ToList();
             return BadRequest();
         }
+        
+        AuthenticationResult authResult = await _identityService.RegisterAsync(request.UserName, request.Password);
 
-        RegisterUserResponseDto response = new();
-
-        User user = _mapper.Map<User>(baseRequest);
-        IdentityResult identityResult = await _userManager.CreateAsync(user, baseRequest.Password);
-        List<IdentityError> errors = identityResult.Errors.ToList();
-
-        if (errors.Any())
+        if (authResult.Success)
         {
-            response.Errors = errors;
-            _logger.LogInformation("There were errors while creating a user: {@errors}", errors);
-            return BadRequest(response);
+            return Ok(response);
         }
         else
         {
-            return Ok(response);
+            response.Errors = authResult.Errors;
+            return BadRequest(response);
         }
     }
 
     [HttpPost("signin")]
-    public async Task<ActionResult> SignIn(UserBaseRequestDto request)
+    public async Task<ActionResult<AuthenticationResponseDto>> SignIn(UserBaseRequestDto request)
     {
+        AuthenticationResponseDto response = new();
+
         if (!ModelState.IsValid)
         {
+            response.Errors = ModelState.Values.SelectMany(x => x.Errors.Select(y => new IdentityError()
+            {
+                Description = y.ErrorMessage
+            })).ToList();
             return BadRequest();
         }
 
-        User? user = await _userManager.Users.SingleOrDefaultAsync(x => string.Equals(x.UserName, request.UserName));
+        AuthenticationResult authResult = await _identityService.AuthenticateAsync(request.UserName, request.Password);
 
-        if (user == null)
+        if (authResult.Success)
+        {
+            response.Token = authResult.Token;
+            response.RefreshToken = authResult.RefreshToken;
+            return Ok(response);
+        }
+        else
         {
             return Unauthorized();
         }
+    }
 
-        bool isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
+    [HttpPost("refreshToken")]
+    public async Task<ActionResult<AuthenticationResponseDto>> RefreshToken(RefreshTokenRequest request)
+    {
+        AuthenticationResult result = await _identityService.RefreshTokenAsync(request.Token, request.RefreshToken);
+        if (result.Success)
+        {
+            AuthenticationResponseDto response = new()
+            {
+                Token = result.Token,
+                RefreshToken = result.RefreshToken
+            };
 
-        if (!isPasswordValid)
+            return Ok(response);
+        }
+        else
         {
             return Unauthorized();
         }
-        
-        string authToken = await _authTokenService.GetAuthTokenAsync(user);
-        return Ok(authToken);
     }
 }
