@@ -44,8 +44,8 @@ namespace AZChat
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-            IConfiguration authConfig = builder.Configuration.GetSection(AuthenticationConfiguration.SectionName);
-            builder.Services.Configure<AuthenticationConfiguration>(authConfig);
+            IConfiguration authConfig = builder.Configuration.GetSection(JwtConfiguration.SectionName);
+            builder.Services.Configure<JwtConfiguration>(authConfig);
 
             builder.Services.AddLogging(loggingBuilder =>
             {
@@ -78,12 +78,12 @@ namespace AZChat
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = authConfig[nameof(AuthenticationConfiguration.Issuer)],
-                ValidAudience = authConfig[nameof(AuthenticationConfiguration.Audience)],
+                ValidIssuer = authConfig[nameof(JwtConfiguration.Issuer)],
+                ValidAudience = authConfig[nameof(JwtConfiguration.Audience)],
                 ClockSkew = TimeSpan.Zero,
                 IssuerSigningKey =
                     new SymmetricSecurityKey(
-                        Encoding.ASCII.GetBytes(authConfig[nameof(AuthenticationConfiguration.Secret)]))
+                        Encoding.ASCII.GetBytes(authConfig[nameof(JwtConfiguration.Secret)]))
             };
 
             builder.Services.AddSingleton(tokenValidationParameters);

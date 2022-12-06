@@ -75,9 +75,9 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("refreshToken")]
-    public async Task<ActionResult<AuthenticationResponseDto>> RefreshToken(RefreshTokenRequest request)
+    public async Task<ActionResult<AuthenticationResponseDto>> RefreshToken(RefreshTokenRequestDto requestDto)
     {
-        AuthenticationResult result = await _identityService.RefreshTokenAsync(request.Token, request.RefreshToken);
+        AuthenticationResult result = await _identityService.RefreshTokenAsync(requestDto.Token, requestDto.RefreshToken);
         if (result.Success)
         {
             AuthenticationResponseDto response = new()

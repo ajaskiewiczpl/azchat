@@ -12,10 +12,10 @@ namespace AZChat.Services.Authentication;
 
 public class JwtAuthTokenService : IAuthTokenService
 {
-    private readonly IOptions<AuthenticationConfiguration> _authConfig;
+    private readonly IOptions<JwtConfiguration> _authConfig;
     private readonly IDateTime _dateTime;
 
-    public JwtAuthTokenService(IOptions<AuthenticationConfiguration> authConfig, IDateTime dateTime)
+    public JwtAuthTokenService(IOptions<JwtConfiguration> authConfig, IDateTime dateTime)
     {
         _authConfig = authConfig;
         _dateTime = dateTime;
@@ -28,7 +28,7 @@ public class JwtAuthTokenService : IAuthTokenService
         SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_authConfig.Value.Secret));
         SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        DateTime expires = _dateTime.UtcNow.Add(_authConfig.Value.TokenLifetime);
+        DateTime expires = _dateTime.UtcNow.Add(_authConfig.Value.JwtLifetime);
 
         List<Claim> claims = new List<Claim>()
         {

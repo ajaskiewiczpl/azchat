@@ -15,7 +15,7 @@ namespace AZChat.Services.Authentication;
 
 public class IdentityService : IIdentityService
 {
-    private readonly IOptions<AuthenticationConfiguration> _authOptions;
+    private readonly IOptions<JwtConfiguration> _jwtConfig;
     private readonly AppDbContext _appDbContext;
     private readonly UserManager<User> _userManager;
     private readonly IAuthTokenService _authTokenService;
@@ -24,9 +24,9 @@ public class IdentityService : IIdentityService
     private readonly IDateTime _dateTime;
     private readonly ILogger<IdentityService> _logger;
 
-    public IdentityService(IOptions<AuthenticationConfiguration> authOptions, AppDbContext appDbContext, UserManager<User> userManager, IAuthTokenService authTokenService, IMapper mapper, TokenValidationParameters tokenValidationParameters, IDateTime dateTime, ILogger<IdentityService> logger)
+    public IdentityService(IOptions<JwtConfiguration> jwtConfig, AppDbContext appDbContext, UserManager<User> userManager, IAuthTokenService authTokenService, IMapper mapper, TokenValidationParameters tokenValidationParameters, IDateTime dateTime, ILogger<IdentityService> logger)
     {
-        _authOptions = authOptions;
+        _jwtConfig = jwtConfig;
         _appDbContext = appDbContext;
         _userManager = userManager;
         _authTokenService = authTokenService;
@@ -165,6 +165,12 @@ public class IdentityService : IIdentityService
 
         User? user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == CustomClaims.UserIdClaim).Value);
 
+        if (user == null)
+        {
+            _logger.LogInformation("User doesn't exist");
+            return errorResult;
+        }
+
         return await GenerateAuthTokenAsync(user);
     }
 
@@ -177,7 +183,7 @@ public class IdentityService : IIdentityService
             JwtId = token.Id,
             UserId = user.Id,
             CreatedOn = _dateTime.UtcNow,
-            ExpiresOn = _dateTime.UtcNow.AddDays(7)
+            ExpiresOn = _dateTime.UtcNow.Add(_jwtConfig.Value.RefreshTokenLifetime)
         };
 
         await _appDbContext.RefreshTokens.AddAsync(refreshToken);
@@ -191,7 +197,7 @@ public class IdentityService : IIdentityService
         };
     }
 
-    private ClaimsPrincipal GetPrincipalFromToken(string token)
+    private ClaimsPrincipal? GetPrincipalFromToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
 
@@ -208,7 +214,7 @@ public class IdentityService : IIdentityService
 
             return principal;
         }
-        catch (Exception ex)
+        catch
         {
             return null;
         }

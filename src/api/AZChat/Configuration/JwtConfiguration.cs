@@ -1,8 +1,8 @@
 ﻿namespace AZChat.Configuration;
 
-public class AuthenticationConfiguration
+public class JwtConfiguration
 {
-    public const string SectionName = "Authentication";
+    public const string SectionName = "JWT";
 
     public string Secret { get; set; } = null!;
 
@@ -10,5 +10,7 @@ public class AuthenticationConfiguration
 
     public string Audience { get; set; } = null!;
 
-    public TimeSpan TokenLifetime { get; set; }
+    public TimeSpan JwtLifetime { get; set; }
+
+    public TimeSpan RefreshTokenLifetime { get; set; }
 }
