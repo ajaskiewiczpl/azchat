@@ -3,10 +3,14 @@ import { redirect, useNavigate, Route, Routes } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import blue from '@mui/material/colors/blue';
 import './App.css';
-import SignInPage from "./Pages/SignInPage";
-import SignUpPage from "./Pages/SignUpPage";
-import HomePage from "./Pages/HomePage";
-import NotFound from "./Pages/NotFound";
+import SignInPage from "./pages/SignInPage";
+import SignUpPage from "./pages/SignUpPage";
+import HomePage from "./pages/HomePage";
+import NotFound from "./pages/NotFound";
+import Forbidden from "./pages/Forbidden";
+import { AuthProvider } from "./context/AuthProvider";
+import Layout from "./pages/Layout";
+import RequireAuth from "./components/RequireAuth";
 
 const theme = createTheme({
   palette: {
@@ -18,12 +22,22 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+
+            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/forbidden" element={<Forbidden />} />
+
+            <Route element={<RequireAuth />}>
+              <Route path="/" element={<HomePage />} />
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

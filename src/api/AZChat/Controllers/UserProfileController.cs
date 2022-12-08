@@ -14,6 +14,6 @@ public class UserProfileController : ControllerBase
     public async Task<ActionResult> GetProfile()
     {
         string userName = User.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Name).Value;
-        return Ok(userName);
+        return Ok($"{DateTime.Now} {userName}");
     }
 }

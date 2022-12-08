@@ -12,10 +12,9 @@ const HomePage = (props: Props) => {
   const [userName, setUserName] = useState('');
   const navigate = useNavigate();
 
-  const api = new ApiClient();
-
   const handleGetUserInfo = async () => {
     try {
+      const api = new ApiClient();
       const response = await api.userProfile.getApiUserProfile();
       setUserName(response);
     } catch (err) {
@@ -25,11 +24,16 @@ const HomePage = (props: Props) => {
 
   const handleSignOut = async () => {
     try {
-      localStorage.removeItem("token");
+      const api = new ApiClient();
+      api.request.config.WITH_CREDENTIALS = true;
       await api.identity.postApiIdentitySignout();
-      navigate("/signin");
-    } catch (err) {
+    }
+    catch (err) {
 
+    }
+    finally {
+      localStorage.removeItem("token");
+      navigate("/signin");
     }
   }
 

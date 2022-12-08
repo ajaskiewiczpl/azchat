@@ -30,12 +30,19 @@ namespace AZChat
 
             WebApplicationBuilder builder = GetWebApplicationBuilder(args);
             WebApplication app = builder.Build();
-
             app.Logger.LogInformation("Web app created");
 
             await ConfigureApp(app);
+            app.Logger.LogInformation("Web app configured");
+            
+            app.Logger.LogInformation("Migrating database schema");
+            using (var scope = app.Services.CreateScope())
+            {
+                AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await dbContext.Database.MigrateAsync();
+            }
 
-            app.Logger.LogInformation("Web app configured, starting up");
+            // TODO cleanup RefreshTokens
 
             await app.RunAsync();
         }
@@ -206,13 +213,6 @@ namespace AZChat
 
             app.MapHealthChecks(ApiHealthCheck.Name);
             app.MapControllers();
-
-            app.Logger.LogInformation("Migrating database schema");
-            using (var scope = app.Services.CreateScope())
-            {
-                AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await dbContext.Database.MigrateAsync();
-            }
         }
 
         private static void ConfigureLogging()

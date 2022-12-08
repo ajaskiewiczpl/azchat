@@ -5,19 +5,17 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SendIcon from '@mui/icons-material/Send';
 import { Box, Container } from "@mui/system";
-import SignUpPage from "./SignUpPage";
 import { ApiClient } from "../api/ApiClient";
 import { ApiError } from "../api/generated/core/ApiError";
 import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
+import useAuth from "../hooks/useAuth";
 
 export default function SignInPage() {
 
+    const { persistToken } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || "/";
-
-    OpenAPI.WITH_CREDENTIALS = true;
-    const api = new ApiClient();
 
     let defaultUserName = "", defaultPassword = "";
 
@@ -40,13 +38,15 @@ export default function SignInPage() {
         try {
             setLoading(true);
             setErrorMessage('');
+
+            const api = new ApiClient();
+            api.request.config.WITH_CREDENTIALS = true;
             let response: AuthenticationResponseDto = await api.identity.postApiIdentitySignin({
                 userName: userName,
                 password: password
             });
             const token = response.token || "";
-            localStorage.setItem("token", token);
-            OpenAPI.TOKEN = token;
+            persistToken(token);
             navigate(from, { replace: true });
         }
         catch (err: any) {
