@@ -1,22 +1,34 @@
-import { useEffect } from "react";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import { useEffect, useState } from "react";
 import { redirect, useNavigate } from "react-router-dom";
+import { ApiClient } from "../api/ApiClient";
+import { OpenAPI } from "../api/generated";
 
-export default function HomePage() {
+type Props = {}
 
-    const navigate = useNavigate();
+const HomePage = (props: Props) => {
 
-    useEffect(() => {
-        function redirectToLoginIfNeeded() {
-    
-          // TODO check JWT Token
-    
-          navigate("/signin");
-        }
-    
-        redirectToLoginIfNeeded();
-      }, []);
-    
-    return (
-        <div></div>
-    );
+  const [userName, setUserName] = useState('');
+
+  const api = new ApiClient();
+
+  const handleGetUserInfo = async () => {
+    try {
+      const response = await api.userProfile.getApiUserProfile();
+      setUserName(response);
+    } catch (err) {
+
+    }
+  }
+
+  return (
+    <div>
+      <Typography>User name: {userName}</Typography>
+      <br></br>
+      <Button variant="contained" onClick={handleGetUserInfo}>Get user info</Button>
+    </div>
+  )
 }
+
+export default HomePage

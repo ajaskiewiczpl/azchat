@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "api": "openapi --input http://localhost:5000/swagger/v1/swagger.json --output ./src/generated --client axios --name GeneratedApiClient"
+    "api": "openapi --input http://localhost:5000/swagger/v1/swagger.json --output ./src/api/generated --client axios --name GeneratedApiClient"
   },
   "dependencies": {
     "@emotion/react": "^11.10.5",

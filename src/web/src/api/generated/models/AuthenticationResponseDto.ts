@@ -4,6 +4,8 @@
 
 import type { IdentityError } from './IdentityError';
 
-export type RegisterUserResponseDto = {
+export type AuthenticationResponseDto = {
+    token?: string | null;
     errors?: Array<IdentityError> | null;
+    readonly success?: boolean;
 };

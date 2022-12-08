@@ -13,7 +13,7 @@ public class UserProfileController : ControllerBase
     [HttpGet()]
     public async Task<ActionResult> GetProfile()
     {
-        string userId = User.Claims.Single(x => x.Type == CustomClaims.UserIdClaim).Value;
-        return Ok(userId);
+        string userName = User.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Name).Value;
+        return Ok(userName);
     }
 }

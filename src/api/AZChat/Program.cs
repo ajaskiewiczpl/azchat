@@ -62,15 +62,26 @@ namespace AZChat
             {
                 string dbFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db.sqlite");
                 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbFilePath}"));
+                builder.Services
+                    .AddIdentity<User, IdentityRole>(identityOptions =>
+                    {
+                        identityOptions.Password.RequireDigit = false;
+                        identityOptions.Password.RequireLowercase = false;
+                        identityOptions.Password.RequireNonAlphanumeric = false;
+                        identityOptions.Password.RequireUppercase = false;
+                        identityOptions.Password.RequiredLength = 1;
+                    })
+                    .AddEntityFrameworkStores<AppDbContext>();
                 builder.Services.AddCors();
             }
             else
             {
+                builder.Services
+                    .AddIdentity<User, IdentityRole>(identityOptions =>
+                    {
+                    })
+                    .AddEntityFrameworkStores<AppDbContext>();
             }
-
-            builder.Services
-                .AddIdentity<User, IdentityRole>(identityOptions => { })
-                .AddEntityFrameworkStores<AppDbContext>();
 
             TokenValidationParameters tokenValidationParameters = new TokenValidationParameters()
             {
@@ -98,7 +109,7 @@ namespace AZChat
                 .AddJwtBearer(options =>
                 {
                     options.SaveToken = true;
-                    
+
                     options.TokenValidationParameters = tokenValidationParameters;
                 });
 
@@ -159,7 +170,7 @@ namespace AZChat
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                app.UseCors(cors => cors.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+                app.UseCors(cors => cors.AllowCredentials().AllowAnyHeader().WithOrigins("http://localhost:3000"));
             }
             else
             {

@@ -1,4 +1,5 @@
-﻿using AZChat.Data.DTOs;
+using System.Net;
+using AZChat.Data.DTOs;
 using AZChat.Services.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +66,7 @@ public class IdentityController : ControllerBase
         if (authResult.Success)
         {
             response.Token = authResult.Token;
-            response.RefreshToken = authResult.RefreshToken;
+            AddRefreshTokenToResponse(authResult.RefreshToken);
             return Ok(response);
         }
         else
@@ -77,14 +78,23 @@ public class IdentityController : ControllerBase
     [HttpPost("refreshToken")]
     public async Task<ActionResult<AuthenticationResponseDto>> RefreshToken(RefreshTokenRequestDto requestDto)
     {
-        AuthenticationResult result = await _identityService.RefreshTokenAsync(requestDto.Token, requestDto.RefreshToken);
-        if (result.Success)
+        string? refreshToken = Request.Cookies["refreshToken"];
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            _logger.LogInformation("Could not find refresh token cookie");
+            return BadRequest();
+        }
+
+        AuthenticationResult authResult = await _identityService.RefreshTokenAsync(requestDto.Token, refreshToken);
+        if (authResult.Success)
         {
             AuthenticationResponseDto response = new()
             {
-                Token = result.Token,
-                RefreshToken = result.RefreshToken
+                Token = authResult.Token
             };
+
+            AddRefreshTokenToResponse(authResult.RefreshToken);
 
             return Ok(response);
         }
@@ -92,5 +102,13 @@ public class IdentityController : ControllerBase
         {
             return Unauthorized();
         }
+    }
+
+    private void AddRefreshTokenToResponse(string refreshToken)
+    {
+        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions()
+        {
+            HttpOnly = true
+        });
     }
 }

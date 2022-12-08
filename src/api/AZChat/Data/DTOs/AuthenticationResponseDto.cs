@@ -6,8 +6,6 @@ public class AuthenticationResponseDto
 {
     public string? Token { get; set; }
 
-    public string? RefreshToken { get; set; }
-
     public List<IdentityError> Errors { get; set; } = new();
 
     public bool Success => !Errors.Any();

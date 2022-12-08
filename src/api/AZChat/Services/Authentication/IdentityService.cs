@@ -163,7 +163,7 @@ public class IdentityService : IIdentityService
         _appDbContext.RefreshTokens.Update(storedRefreshToken);
         await _appDbContext.SaveChangesAsync();
 
-        User? user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == CustomClaims.UserIdClaim).Value);
+        User? user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Sub).Value);
 
         if (user == null)
         {

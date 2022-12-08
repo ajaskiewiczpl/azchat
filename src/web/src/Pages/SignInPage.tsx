@@ -1,22 +1,34 @@
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Alert, Avatar, Button, Card, Grid, Snackbar, TextField, Typography } from "@mui/material";
 import LoadingButton from '@mui/lab/LoadingButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import SendIcon from '@mui/icons-material/Send';
 import { Box, Container } from "@mui/system";
-import React, { useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import SignUpPage from "./SignUpPage";
 import { ApiClient } from "../api/ApiClient";
-import { ApiError } from "../api";
+import { ApiError } from "../api/generated/core/ApiError";
+import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
 
 export default function SignInPage() {
 
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/";
+
     const api = new ApiClient();
 
-    let [errorMessage, setError] = useState('');
-    let [loading, setLoading] = useState(false);
+    let defaultUserName = "", defaultPassword = "";
 
-    const isErrorVisible = errorMessage.length > 0;
+    if (import.meta.env.MODE == 'development') {
+        defaultUserName = import.meta.env.VITE_APP_DEFAULT_USERNAME;
+        defaultPassword = import.meta.env.VITE_APP_DEFAULT_PASSWORD;
+    }
+
+    const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const error = errorMessage.length > 0;
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -26,14 +38,19 @@ export default function SignInPage() {
         const password = data.get('password')?.toString() || "";
         try {
             setLoading(true);
-            setError('');
-            let jwtToken = await api.identity.postApiIdentitySignin({
+            setErrorMessage('');
+            let response: AuthenticationResponseDto = await api.identity.postApiIdentitySignin({
                 userName: userName,
                 password: password
             });
+            const token = response.token || "";
+            localStorage.setItem("token", token);
+            OpenAPI.TOKEN = token;
+            OpenAPI.WITH_CREDENTIALS = true;
+            navigate(from, { replace: true });
         }
-        catch (error: any) {
-            let exception = error as ApiError;
+        catch (err: any) {
+            let exception = err as ApiError;
             let msg;
             switch (exception.status) {
                 case 401:
@@ -46,7 +63,7 @@ export default function SignInPage() {
                     msg = "Unknown error, please try again"
                     break;
             }
-            setError(msg);
+            setErrorMessage(msg);
         }
         finally {
             setLoading(false);
@@ -67,7 +84,7 @@ export default function SignInPage() {
                 <Typography component="h1">
                     Sign In
                 </Typography>
-                <Alert severity="error" sx={{ mt: 2, display: isErrorVisible ? "flex" : "none" }}>{errorMessage}</Alert>
+                <Alert severity="error" sx={{ mt: 2, display: error ? "flex" : "none" }}>{errorMessage}</Alert>
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"
@@ -75,7 +92,9 @@ export default function SignInPage() {
                         fullWidth
                         label="User Name"
                         name="userName"
-                        autoComplete="username"
+                        autoComplete="off"
+                        disabled={loading}
+                        defaultValue={defaultUserName}
                         autoFocus
                     />
                     <TextField
@@ -85,6 +104,8 @@ export default function SignInPage() {
                         name="password"
                         label="Password"
                         type="password"
+                        disabled={loading}
+                        defaultValue={defaultPassword}
                         autoComplete="current-password"
                     />
                     <LoadingButton
@@ -100,7 +121,7 @@ export default function SignInPage() {
                     </LoadingButton>
                     <Grid container>
                         <Grid item xs>
-                            <Button component={Link} to={"/signup"}>Don't have an account? Sign Up</Button>
+                            <Button component={Link} to={"/signup"} disabled={loading}>Don't have an account? Sign Up</Button>
                         </Grid>
                     </Grid>
                 </Box>

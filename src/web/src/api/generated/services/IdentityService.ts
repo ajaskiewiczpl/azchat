@@ -1,7 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { RegisterUserResponseDto } from '../models/RegisterUserResponseDto';
+import type { AuthenticationResponseDto } from '../models/AuthenticationResponseDto';
+import type { RefreshTokenRequestDto } from '../models/RefreshTokenRequestDto';
 import type { UserBaseRequestDto } from '../models/UserBaseRequestDto';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -13,12 +14,12 @@ export class IdentityService {
 
     /**
      * @param requestBody 
-     * @returns RegisterUserResponseDto Success
+     * @returns AuthenticationResponseDto Success
      * @throws ApiError
      */
     public postApiIdentitySignup(
 requestBody?: UserBaseRequestDto,
-): CancelablePromise<RegisterUserResponseDto> {
+): CancelablePromise<AuthenticationResponseDto> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/Identity/signup',
@@ -29,15 +30,31 @@ requestBody?: UserBaseRequestDto,
 
     /**
      * @param requestBody 
-     * @returns any Success
+     * @returns AuthenticationResponseDto Success
      * @throws ApiError
      */
     public postApiIdentitySignin(
 requestBody?: UserBaseRequestDto,
-): CancelablePromise<any> {
+): CancelablePromise<AuthenticationResponseDto> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/Identity/signin',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+
+    /**
+     * @param requestBody 
+     * @returns AuthenticationResponseDto Success
+     * @throws ApiError
+     */
+    public postApiIdentityRefreshToken(
+requestBody?: RefreshTokenRequestDto,
+): CancelablePromise<AuthenticationResponseDto> {
+        return this.httpRequest.request({
+            method: 'POST',
+            url: '/api/Identity/refreshToken',
             body: requestBody,
             mediaType: 'application/json',
         });
