@@ -10,6 +10,7 @@ type Props = {}
 const HomePage = (props: Props) => {
 
   const [userName, setUserName] = useState('');
+  const navigate = useNavigate();
 
   const api = new ApiClient();
 
@@ -22,11 +23,22 @@ const HomePage = (props: Props) => {
     }
   }
 
+  const handleSignOut = async () => {
+    try {
+      localStorage.removeItem("token");
+      await api.identity.postApiIdentitySignout();
+      navigate("/signin");
+    } catch (err) {
+
+    }
+  }
+
   return (
     <div>
       <Typography>User name: {userName}</Typography>
-      <br></br>
+      <br />
       <Button variant="contained" onClick={handleGetUserInfo}>Get user info</Button>
+      <Button variant="contained" onClick={handleSignOut}>Sign Out</Button>
     </div>
   )
 }

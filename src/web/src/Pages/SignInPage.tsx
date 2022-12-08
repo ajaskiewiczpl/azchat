@@ -16,6 +16,7 @@ export default function SignInPage() {
     const location = useLocation();
     const from = location.state?.from?.pathname || "/";
 
+    OpenAPI.WITH_CREDENTIALS = true;
     const api = new ApiClient();
 
     let defaultUserName = "", defaultPassword = "";
@@ -46,7 +47,6 @@ export default function SignInPage() {
             const token = response.token || "";
             localStorage.setItem("token", token);
             OpenAPI.TOKEN = token;
-            OpenAPI.WITH_CREDENTIALS = true;
             navigate(from, { replace: true });
         }
         catch (err: any) {

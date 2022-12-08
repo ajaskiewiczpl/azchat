@@ -6,6 +6,7 @@ using AZChat.Data.Models;
 using AZChat.Services.Data;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -124,9 +125,7 @@ public class IdentityService : IIdentityService
             _logger.LogInformation("Token hasn't expired yet");
             return errorResult;
         }
-
-        string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
-
+        
         RefreshToken? storedRefreshToken = await _appDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == refreshToken);
 
         if (storedRefreshToken == null)
@@ -135,27 +134,23 @@ public class IdentityService : IIdentityService
             return errorResult;
         }
 
+        string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+
+        if (storedRefreshToken.JwtId != jti)
+        {
+            _logger.LogInformation("Refresh token doesn't match JWT");
+            return errorResult;
+        }
+
         if (_dateTime.UtcNow > storedRefreshToken.ExpiresOn)
         {
             _logger.LogInformation("Refresh token has expired");
             return errorResult;
         }
-
-        if (storedRefreshToken.Invalidated)
-        {
-            _logger.LogInformation("Refresh token has been invalidated");
-            return errorResult;
-        }
-
+        
         if (storedRefreshToken.Used)
         {
             _logger.LogInformation("Refresh token has been used");
-            return errorResult;
-        }
-
-        if (storedRefreshToken.JwtId != jti)
-        {
-            _logger.LogInformation("Refresh token doesn't match JWT");
             return errorResult;
         }
 
@@ -172,6 +167,17 @@ public class IdentityService : IIdentityService
         }
 
         return await GenerateAuthTokenAsync(user);
+    }
+
+    public async Task SignOutAsync(string refreshToken)
+    {
+        RefreshToken? storedRefreshToken = await _appDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == refreshToken);
+
+        if (storedRefreshToken != null)
+        {
+            _appDbContext.RefreshTokens.Remove(storedRefreshToken);
+            await _appDbContext.SaveChangesAsync();
+        }
     }
 
     private async Task<AuthenticationResult> GenerateAuthTokenAsync(User user)

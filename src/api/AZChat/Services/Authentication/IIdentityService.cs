@@ -8,6 +8,7 @@ public interface IIdentityService
     Task<AuthenticationResult> RegisterAsync(string userName, string password);
     Task<AuthenticationResult> AuthenticateAsync(string userName, string password);
     Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken);
+    Task SignOutAsync(string refreshToken);
 }
 
 public class AuthenticationResult

@@ -10,6 +10,8 @@ namespace AZChat.Controllers;
 [Route("api/[controller]")]
 public class IdentityController : ControllerBase
 {
+    private const string RefreshTokenCookieName = "refreshToken";
+
     private readonly IIdentityService _identityService;
     private readonly ILogger<IdentityController> _logger;
 
@@ -75,10 +77,10 @@ public class IdentityController : ControllerBase
         }
     }
 
-    [HttpPost("refreshToken")]
+    [HttpPost("refreshtoken")]
     public async Task<ActionResult<AuthenticationResponseDto>> RefreshToken(RefreshTokenRequestDto requestDto)
     {
-        string? refreshToken = Request.Cookies["refreshToken"];
+        string? refreshToken = Request.Cookies[RefreshTokenCookieName];
 
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
@@ -104,9 +106,34 @@ public class IdentityController : ControllerBase
         }
     }
 
+    [HttpPost("signout")]
+    public async Task<ActionResult> TokenSignOut()
+    {
+        Response.Cookies.Delete(RefreshTokenCookieName);
+
+        string? refreshToken = Request.Cookies[RefreshTokenCookieName];
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            _logger.LogInformation("Could not find refresh token cookie");
+            return BadRequest();
+        }
+
+        try
+        {
+            await _identityService.SignOutAsync(refreshToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while signing out user using refresh token");
+        }
+
+        return Ok();
+    }
+
     private void AddRefreshTokenToResponse(string refreshToken)
     {
-        Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions()
+        Response.Cookies.Append(RefreshTokenCookieName, refreshToken, new CookieOptions()
         {
             HttpOnly = true
         });

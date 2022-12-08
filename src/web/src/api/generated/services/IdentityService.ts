@@ -49,14 +49,25 @@ requestBody?: UserBaseRequestDto,
      * @returns AuthenticationResponseDto Success
      * @throws ApiError
      */
-    public postApiIdentityRefreshToken(
+    public postApiIdentityRefreshtoken(
 requestBody?: RefreshTokenRequestDto,
 ): CancelablePromise<AuthenticationResponseDto> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/api/Identity/refreshToken',
+            url: '/api/Identity/refreshtoken',
             body: requestBody,
             mediaType: 'application/json',
+        });
+    }
+
+    /**
+     * @returns any Success
+     * @throws ApiError
+     */
+    public postApiIdentitySignout(): CancelablePromise<any> {
+        return this.httpRequest.request({
+            method: 'POST',
+            url: '/api/Identity/signout',
         });
     }
 
