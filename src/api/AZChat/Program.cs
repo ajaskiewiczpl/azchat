@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -89,6 +90,8 @@ namespace AZChat
                     })
                     .AddEntityFrameworkStores<AppDbContext>();
             }
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/issues/415
 
             TokenValidationParameters tokenValidationParameters = new TokenValidationParameters()
             {

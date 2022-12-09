@@ -102,7 +102,7 @@ public class IdentityController : ControllerBase
         }
         else
         {
-            return Unauthorized();
+            return BadRequest();
         }
     }
 

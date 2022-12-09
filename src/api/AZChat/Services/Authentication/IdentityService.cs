@@ -123,7 +123,11 @@ public class IdentityService : IIdentityService
         if (expiryDateUtc > _dateTime.UtcNow)
         {
             _logger.LogInformation("Token hasn't expired yet");
-            return errorResult;
+            return new AuthenticationResult()
+            {
+                Token = token,
+                RefreshToken = refreshToken
+            };
         }
         
         RefreshToken? storedRefreshToken = await _appDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == refreshToken);
