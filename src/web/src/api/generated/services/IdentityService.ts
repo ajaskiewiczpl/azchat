@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type { AuthenticationResponseDto } from '../models/AuthenticationResponseDto';
 import type { RefreshTokenRequestDto } from '../models/RefreshTokenRequestDto';
+import type { RegistrationResponseDto } from '../models/RegistrationResponseDto';
 import type { UserBaseRequestDto } from '../models/UserBaseRequestDto';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -14,12 +15,12 @@ export class IdentityService {
 
     /**
      * @param requestBody 
-     * @returns AuthenticationResponseDto Success
+     * @returns RegistrationResponseDto Success
      * @throws ApiError
      */
     public postApiIdentitySignup(
 requestBody?: UserBaseRequestDto,
-): CancelablePromise<AuthenticationResponseDto> {
+): CancelablePromise<RegistrationResponseDto> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/Identity/signup',

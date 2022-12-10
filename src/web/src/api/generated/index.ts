@@ -12,6 +12,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 export type { AuthenticationResponseDto } from './models/AuthenticationResponseDto';
 export type { IdentityError } from './models/IdentityError';
 export type { RefreshTokenRequestDto } from './models/RefreshTokenRequestDto';
+export type { RegistrationResponseDto } from './models/RegistrationResponseDto';
 export type { UserBaseRequestDto } from './models/UserBaseRequestDto';
 
 export { IdentityService } from './services/IdentityService';

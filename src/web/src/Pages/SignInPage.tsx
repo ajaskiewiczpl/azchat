@@ -85,6 +85,13 @@ export default function SignInPage() {
                 <Alert severity="error" sx={{ mt: 2, display: error ? "flex" : "none" }}>
                     {errorMessage}
                 </Alert>
+                {location.state?.registrationSuccess ? (
+                    <Alert sx={{ mt: 2, mb: 2 }}>
+                        Registration successful, you can now sign in using your credentials.
+                    </Alert>
+                ) : (
+                    <></>
+                )}
                 <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"

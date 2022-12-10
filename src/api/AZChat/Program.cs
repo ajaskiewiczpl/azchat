@@ -77,7 +77,7 @@ namespace AZChat
                         identityOptions.Password.RequireLowercase = false;
                         identityOptions.Password.RequireNonAlphanumeric = false;
                         identityOptions.Password.RequireUppercase = false;
-                        identityOptions.Password.RequiredLength = 1;
+                        identityOptions.Password.RequiredLength = 3;
                     })
                     .AddEntityFrameworkStores<AppDbContext>();
                 builder.Services.AddCors();

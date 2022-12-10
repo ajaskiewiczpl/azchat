@@ -23,9 +23,9 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("signup")]
-    public async Task<ActionResult<AuthenticationResponseDto>> SignUp(UserBaseRequestDto request)
+    public async Task<ActionResult<RegistrationResponseDto>> SignUp(UserBaseRequestDto request)
     {
-        AuthenticationResponseDto response = new();
+        RegistrationResponseDto response = new();
 
         if (!ModelState.IsValid)
         {
