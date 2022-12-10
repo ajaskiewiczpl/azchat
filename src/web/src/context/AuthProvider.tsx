@@ -1,6 +1,8 @@
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { ApiClient } from "../api/ApiClient";
+import useRefreshToken from "../hooks/useRefreshToken";
 import customHistory from "./customHistory";
 
 export type Auth = {
@@ -9,6 +11,7 @@ export type Auth = {
     token: string;
     setToken: (t: string) => void;
     persistToken: (t: string) => void;
+    signOut: () => void;
 };
 
 const AuthContext = createContext<Auth>({
@@ -17,6 +20,7 @@ const AuthContext = createContext<Auth>({
     token: "",
     setToken: (t: string) => {},
     persistToken: (t: string) => {},
+    signOut: () => {},
 });
 
 type Props = {
@@ -24,6 +28,9 @@ type Props = {
 };
 
 export const AuthProvider = (props: Props) => {
+    const refresh = useRefreshToken();
+    const location = useLocation();
+
     const [userName, setUserName] = useState<string>("");
     const [token, setToken] = useState<string>(localStorage.getItem("token") || "");
 
@@ -35,13 +42,13 @@ export const AuthProvider = (props: Props) => {
     const signOut = () => {
         setToken("");
         localStorage.removeItem("token");
-        customHistory.replace("/signin");
+        customHistory.replace("/signin", { from: location });
     };
 
     useEffect(() => {
         const requestIntercept = axios.interceptors.request.use(
             (config) => {
-                if (config.url?.includes("api/Identity/")) {
+                if (config.url?.includes("api/Identity")) {
                     return config;
                 }
 
@@ -61,19 +68,13 @@ export const AuthProvider = (props: Props) => {
                 const prevRequest = error?.config;
 
                 if (
-                    !prevRequest.url?.includes("api/Identity/") &&
+                    !prevRequest.url?.includes("api/Identity") &&
                     error?.response?.status === 401 &&
                     !prevRequest?.sent
                 ) {
                     prevRequest.sent = true;
                     try {
-                        const api = new ApiClient();
-                        api.request.config.WITH_CREDENTIALS = true;
-                        const currentToken = localStorage.getItem("token") || "";
-                        const refreshTokenResponse = await api.identity.postApiIdentityRefreshtoken({
-                            token: currentToken,
-                        });
-                        const refreshedToken = refreshTokenResponse.token ?? "";
+                        const refreshedToken = await refresh();
                         persistToken(refreshedToken);
                         prevRequest.headers["Authorization"] = `Bearer ${refreshedToken}`;
                         return axios(prevRequest);
@@ -94,7 +95,7 @@ export const AuthProvider = (props: Props) => {
     });
 
     return (
-        <AuthContext.Provider value={{ userName, setUserName, token, setToken, persistToken }}>
+        <AuthContext.Provider value={{ userName, setUserName, token, setToken, persistToken, signOut }}>
             {props.children}
         </AuthContext.Provider>
     );

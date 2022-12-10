@@ -11,9 +11,6 @@ import Forbidden from "./pages/Forbidden";
 import { AuthProvider } from "./context/AuthProvider";
 import Layout from "./pages/Layout";
 import RequireAuth from "./components/RequireAuth";
-import axios from "axios";
-import useAuth from "./hooks/useAuth";
-import { ApiClient } from "./api/ApiClient";
 
 const theme = createTheme({
     palette: {

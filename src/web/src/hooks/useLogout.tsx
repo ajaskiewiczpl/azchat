@@ -1,7 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
+import AuthContext from "../context/AuthProvider";
 
 const useLogout = () => {
-    return <div>useLogout</div>;
+    const { signOut } = useContext(AuthContext);
+
+    const logout = () => {
+        signOut();
+    };
+
+    return logout;
 };
 
 export default useLogout;

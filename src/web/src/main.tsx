@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { redirect, useNavigate, Route, Routes, unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
+import { Route, Routes, unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
 import App from "./App";
 import customHistory from "./context/customHistory";
 import "./index.css";

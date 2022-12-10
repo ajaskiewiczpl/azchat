@@ -1,15 +1,15 @@
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import { redirect, useNavigate } from "react-router-dom";
 import { ApiClient } from "../api/ApiClient";
 import { OpenAPI } from "../api/generated";
+import useLogout from "../hooks/useLogout";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
+    const logout = useLogout();
     const [userName, setUserName] = useState("");
-    const navigate = useNavigate();
 
     const handleGetUserInfo = async () => {
         try {
@@ -26,8 +26,7 @@ const HomePage = (props: Props) => {
             await api.identity.postApiIdentitySignout();
         } catch (err) {
         } finally {
-            localStorage.removeItem("token");
-            navigate("/signin");
+            logout();
         }
     };
 
