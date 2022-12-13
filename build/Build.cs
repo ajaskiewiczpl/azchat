@@ -58,8 +58,6 @@ class Build : NukeBuild
 
             NpmInstall(settings => settings
                 .SetProcessWorkingDirectory(webDirectory)
-                .SetForce(true)
-                .SetNoOptional(true)
             );
 
             NpmRun(settings => settings
