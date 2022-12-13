@@ -72,6 +72,6 @@ class Build : NukeBuild
         .DependsOn(Clean, CompileApi, CompileWeb)
         .Executes(() =>
         {
-            CopyDirectoryRecursively(SourceDirectory / "web" / "build", ArtifactsDirectory / "public");
+            CopyDirectoryRecursively(SourceDirectory / "web" / "dist", ArtifactsDirectory / "public");
         });
 }

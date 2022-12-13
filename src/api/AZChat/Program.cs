@@ -70,27 +70,24 @@ namespace AZChat
             {
                 string dbFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db.sqlite");
                 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbFilePath}"));
-                builder.Services
-                    .AddIdentity<User, IdentityRole>(identityOptions =>
-                    {
-                        identityOptions.Password.RequireDigit = false;
-                        identityOptions.Password.RequireLowercase = false;
-                        identityOptions.Password.RequireNonAlphanumeric = false;
-                        identityOptions.Password.RequireUppercase = false;
-                        identityOptions.Password.RequiredLength = 3;
-                    })
-                    .AddEntityFrameworkStores<AppDbContext>();
                 builder.Services.AddCors();
             }
             else
             {
-                builder.Services
-                    .AddIdentity<User, IdentityRole>(identityOptions =>
-                    {
-                    })
-                    .AddEntityFrameworkStores<AppDbContext>();
+                // TODO
             }
 
+            builder.Services
+                .AddIdentity<User, IdentityRole>(identityOptions =>
+                {
+                    identityOptions.Password.RequireDigit = false;
+                    identityOptions.Password.RequireLowercase = false;
+                    identityOptions.Password.RequireNonAlphanumeric = false;
+                    identityOptions.Password.RequireUppercase = false;
+                    identityOptions.Password.RequiredLength = 3;
+                })
+                .AddEntityFrameworkStores<AppDbContext>();
+            
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/issues/415
 
             TokenValidationParameters tokenValidationParameters = new TokenValidationParameters()
