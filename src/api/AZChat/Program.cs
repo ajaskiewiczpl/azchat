@@ -54,6 +54,8 @@ namespace AZChat
 
             IConfiguration authConfig = builder.Configuration.GetSection(JwtConfiguration.SectionName);
             builder.Services.Configure<JwtConfiguration>(authConfig);
+            IConfiguration databaseConfig = builder.Configuration.GetSection(DatabaseConfiguration.SectionName);
+            builder.Services.Configure<DatabaseConfiguration>(databaseConfig);
 
             builder.Services.AddLogging(loggingBuilder =>
             {
@@ -68,14 +70,17 @@ namespace AZChat
 
             if (builder.Environment.IsDevelopment())
             {
-                string dbFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "db.sqlite");
-                builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbFilePath}"));
                 builder.Services.AddCors();
             }
             else
             {
-                // TODO
             }
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            {
+                string? connectionString = databaseConfig[nameof(DatabaseConfiguration.ConnectionString)];
+                options.UseSqlServer(connectionString);
+            });
 
             builder.Services
                 .AddIdentity<User, IdentityRole>(identityOptions =>

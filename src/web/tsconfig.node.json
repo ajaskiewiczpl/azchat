@@ -2,7 +2,7 @@
     "compilerOptions": {
         "composite": true,
         "module": "ESNext",
-        "moduleResolution": "Node16",
+        "moduleResolution": "Node",
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true
     },
