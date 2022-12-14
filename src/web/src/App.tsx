@@ -12,6 +12,7 @@ import { AuthProvider } from "./context/AuthProvider";
 import RequireAuth from "./components/RequireAuth";
 import RequireNoAuth from "./components/RequireNoAuth";
 import Profile from "./Pages/Profile";
+import Messages from "./Pages/Messages";
 
 const theme: Theme = createTheme({
     palette: {
@@ -34,6 +35,7 @@ function App() {
                         <Route element={<RequireAuth />}>
                             <Route path="/" element={<MainPageLayout />}>
                                 <Route path="/profile" element={<Profile />} />
+                                <Route path="/messages" element={<Messages />} />
                             </Route>
                         </Route>
 

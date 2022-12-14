@@ -6,6 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import AccountCircle from "@mui/icons-material/AccountCircle";
+import LogoutIcon from "@mui/icons-material/Logout";
 import NotificationIcon from "@mui/icons-material/Notifications";
 import { useEffect, useState } from "react";
 import { ApiClient } from "../api/ApiClient";
@@ -18,6 +19,8 @@ import { Outlet } from "react-router";
 import Badge from "@mui/material/Badge";
 import { Link } from "react-router-dom";
 import Profile from "./Profile";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 
 type Props = {};
 
@@ -100,10 +103,16 @@ const HomePage = (props: Props) => {
                                 onClick={handleUserProfileClick}
                                 disabled={isLoggingOut}
                             >
-                                Profile
+                                <ListItemIcon>
+                                    <AccountCircle />
+                                </ListItemIcon>
+                                <ListItemText>Profile</ListItemText>
                             </MenuItem>
                             <MenuItem key="signout" onClick={handleLogoutClick} disabled={isLoggingOut}>
-                                Sign Out
+                                <ListItemIcon>
+                                    <LogoutIcon />
+                                </ListItemIcon>
+                                <ListItemText>Sign Out</ListItemText>
                             </MenuItem>
                         </Menu>
                     </Box>
