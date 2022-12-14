@@ -8,7 +8,7 @@ import { Box, Container } from "@mui/system";
 import { ApiClient } from "../api/ApiClient";
 import { ApiError } from "../api/generated/core/ApiError";
 import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
-import useAuth from "../hooks/useAuth";
+import useAuth from "../Hooks/useAuth";
 
 const SignInPage = () => {
     const { persistToken } = useAuth();

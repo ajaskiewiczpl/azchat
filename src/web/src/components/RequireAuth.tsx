@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router";
-import useAuth from "../hooks/useAuth";
+import useAuth from "../Hooks/useAuth";
 
 const RequireAuth = () => {
     const { token } = useAuth();
