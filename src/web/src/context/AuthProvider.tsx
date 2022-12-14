@@ -48,7 +48,7 @@ export const AuthProvider = (props: Props) => {
     useEffect(() => {
         const requestIntercept = axios.interceptors.request.use(
             (config) => {
-                if (config.url?.includes("api/Identity")) {
+                if (config.url?.includes("api/Identity/signin" || config.url?.includes("api/Identity/signup"))) {
                     return config;
                 }
 
@@ -68,7 +68,8 @@ export const AuthProvider = (props: Props) => {
                 const prevRequest = error?.config;
 
                 if (
-                    !prevRequest.url?.includes("api/Identity") &&
+                    !prevRequest.url?.includes("api/Identity/signin") &&
+                    !prevRequest.url?.includes("api/Identity/signup") &&
                     error?.response?.status === 401 &&
                     !prevRequest?.sent
                 ) {

@@ -1,8 +1,10 @@
 using System.Net;
 using AZChat.Data.DTOs;
 using AZChat.Services.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using IdentityResult = AZChat.Services.Authentication.IdentityResult;
 
 namespace AZChat.Controllers;
 
@@ -35,8 +37,8 @@ public class IdentityController : ControllerBase
             })).ToList();
             return BadRequest();
         }
-        
-        AuthenticationResult authResult = await _identityService.RegisterAsync(request.UserName, request.Password);
+
+        IdentityResult authResult = await _identityService.RegisterAsync(request.UserName, request.Password);
 
         if (authResult.Success)
         {
@@ -63,7 +65,7 @@ public class IdentityController : ControllerBase
             return BadRequest();
         }
 
-        AuthenticationResult authResult = await _identityService.AuthenticateAsync(request.UserName, request.Password);
+        IdentityResult authResult = await _identityService.AuthenticateAsync(request.UserName, request.Password);
 
         if (authResult.Success)
         {
@@ -74,6 +76,30 @@ public class IdentityController : ControllerBase
         else
         {
             return Unauthorized();
+        }
+    }
+
+    [Authorize]
+    [HttpPost("changepassword")]
+    public async Task<ActionResult<ChangePasswordResponseDto>> ChangePassword(ChangePasswordRequestDto requestDto)
+    {
+        ChangePasswordResponseDto response = new();
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        IdentityResult result = await _identityService.ChangePasswordAsync(User.Identity.Name, requestDto.CurrentPassword, requestDto.NewPassword);
+
+        if (result.Success)
+        {
+            return Ok(response);
+        }
+        else
+        {
+            response.Errors = result.Errors;
+            return BadRequest(response);
         }
     }
 
@@ -88,7 +114,7 @@ public class IdentityController : ControllerBase
             return BadRequest();
         }
 
-        AuthenticationResult authResult = await _identityService.RefreshTokenAsync(requestDto.Token, refreshToken);
+        IdentityResult authResult = await _identityService.RefreshTokenAsync(requestDto.Token, refreshToken);
         if (authResult.Success)
         {
             AuthenticationResponseDto response = new()

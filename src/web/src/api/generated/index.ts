@@ -10,6 +10,8 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AuthenticationResponseDto } from './models/AuthenticationResponseDto';
+export type { ChangePasswordRequestDto } from './models/ChangePasswordRequestDto';
+export type { ChangePasswordResponseDto } from './models/ChangePasswordResponseDto';
 export type { IdentityError } from './models/IdentityError';
 export type { RefreshTokenRequestDto } from './models/RefreshTokenRequestDto';
 export type { RegistrationResponseDto } from './models/RegistrationResponseDto';

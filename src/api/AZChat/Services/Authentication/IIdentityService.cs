@@ -1,17 +1,19 @@
 ﻿using AZChat.Data.DTOs;
+using AZChat.Data.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace AZChat.Services.Authentication;
 
 public interface IIdentityService
 {
-    Task<AuthenticationResult> RegisterAsync(string userName, string password);
-    Task<AuthenticationResult> AuthenticateAsync(string userName, string password);
-    Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken);
+    Task<IdentityResult> RegisterAsync(string userName, string password);
+    Task<IdentityResult> AuthenticateAsync(string userName, string password);
+    Task<IdentityResult> RefreshTokenAsync(string token, string refreshToken);
+    Task<IdentityResult> ChangePasswordAsync(string userName, string currentPassword, string newPassword);
     Task SignOutAsync(string refreshToken);
 }
 
-public class AuthenticationResult
+public class IdentityResult
 {
     public string? Token { get; set; }
 

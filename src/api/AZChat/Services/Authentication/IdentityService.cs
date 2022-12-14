@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace AZChat.Services.Authentication;
 
@@ -37,51 +36,42 @@ public class IdentityService : IIdentityService
         _logger = logger;
     }
 
-    public async Task<AuthenticationResult> RegisterAsync(string userName, string password)
+    public async Task<IdentityResult> RegisterAsync(string userName, string password)
     {
         User user = new ()
         {
             UserName = userName
         };
 
-        IdentityResult identityResult = await _userManager.CreateAsync(user, password);
+        Microsoft.AspNetCore.Identity.IdentityResult identityResult = await _userManager.CreateAsync(user, password);
 
         if (identityResult.Succeeded)
         {
-            return new AuthenticationResult();
+            return new IdentityResult();
         }
         else
         {
-            return new AuthenticationResult()
+            return new IdentityResult()
             {
                 Errors = identityResult.Errors.ToList()
             };
         }
     }
 
-    public async Task<AuthenticationResult> AuthenticateAsync(string userName, string password)
+    public async Task<IdentityResult> AuthenticateAsync(string userName, string password)
     {
         User? user = await _userManager.FindByNameAsync(userName);
 
         if (user == null)
         {
-            return new AuthenticationResult()
-            {
-                Errors = new()
-                {
-                    new IdentityError()
-                    {
-                        Description = "User doesn't exist"
-                    }
-                }
-            };
+            throw new InvalidOperationException($"User cannot be found: ");
         }
 
         bool isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
 
         if (!isPasswordValid)
         {
-            return new AuthenticationResult()
+            return new IdentityResult()
             {
                 Errors = new()
                 {
@@ -96,9 +86,40 @@ public class IdentityService : IIdentityService
         return await GenerateAuthTokenAsync(user);
     }
 
-    public async Task<AuthenticationResult> RefreshTokenAsync(string token, string refreshToken)
+    public async Task<IdentityResult> ChangePasswordAsync(string userName, string currentPassword, string newPassword)
     {
-        AuthenticationResult errorResult = new AuthenticationResult()
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            throw new ArgumentNullException(nameof(userName));
+        }
+
+        User? user = await _userManager.FindByNameAsync(userName);
+
+        if (user == null)
+        {
+            return new IdentityResult()
+            {
+                Errors = new List<IdentityError>()
+                {
+                    new IdentityError()
+                    {
+                        Description = "User doesn't exist"
+                    }
+                }
+            };
+        }
+
+        Microsoft.AspNetCore.Identity.IdentityResult result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+        
+        return new IdentityResult()
+        {
+            Errors = result.Errors.ToList()
+        };
+    }
+
+    public async Task<IdentityResult> RefreshTokenAsync(string token, string refreshToken)
+    {
+        IdentityResult errorResult = new IdentityResult()
         {
             Errors = new List<IdentityError>()
             {
@@ -123,7 +144,7 @@ public class IdentityService : IIdentityService
         if (expiryDateUtc > _dateTime.UtcNow)
         {
             _logger.LogInformation("Token hasn't expired yet");
-            return new AuthenticationResult()
+            return new IdentityResult()
             {
                 Token = token,
                 RefreshToken = refreshToken
@@ -162,7 +183,7 @@ public class IdentityService : IIdentityService
         _appDbContext.RefreshTokens.Update(storedRefreshToken);
         await _appDbContext.SaveChangesAsync();
 
-        User? user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Sub).Value);
+        User? user = await _userManager.FindByIdAsync(validatedToken.Claims.Single(x => x.Type == CustomClaims.UserId).Value);
 
         if (user == null)
         {
@@ -184,7 +205,7 @@ public class IdentityService : IIdentityService
         }
     }
 
-    private async Task<AuthenticationResult> GenerateAuthTokenAsync(User user)
+    private async Task<IdentityResult> GenerateAuthTokenAsync(User user)
     {
         SecurityToken token = await _authTokenService.GetAuthTokenAsync(user);
 
@@ -200,7 +221,7 @@ public class IdentityService : IIdentityService
         await _appDbContext.SaveChangesAsync();
 
         string authToken = new JwtSecurityTokenHandler().WriteToken(token);
-        return new AuthenticationResult()
+        return new IdentityResult()
         {
             Token = authToken,
             RefreshToken = refreshToken.Token
