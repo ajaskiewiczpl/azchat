@@ -14,4 +14,12 @@
     <PackageReference Include="Nuke.Common" Version="6.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="..\.github\workflows\build.yml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="..\.github\workflows\build.yml" />
+  </ItemGroup>
+
 </Project>
