@@ -2,6 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AuthenticationResponseDto } from '../models/AuthenticationResponseDto';
+import type { ChangePasswordRequestDto } from '../models/ChangePasswordRequestDto';
+import type { ChangePasswordResponseDto } from '../models/ChangePasswordResponseDto';
 import type { RefreshTokenRequestDto } from '../models/RefreshTokenRequestDto';
 import type { RegistrationResponseDto } from '../models/RegistrationResponseDto';
 import type { UserBaseRequestDto } from '../models/UserBaseRequestDto';
@@ -40,6 +42,22 @@ requestBody?: UserBaseRequestDto,
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/Identity/signin',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+
+    /**
+     * @param requestBody 
+     * @returns ChangePasswordResponseDto Success
+     * @throws ApiError
+     */
+    public postApiIdentityChangepassword(
+requestBody?: ChangePasswordRequestDto,
+): CancelablePromise<ChangePasswordResponseDto> {
+        return this.httpRequest.request({
+            method: 'POST',
+            url: '/api/Identity/changepassword',
             body: requestBody,
             mediaType: 'application/json',
         });

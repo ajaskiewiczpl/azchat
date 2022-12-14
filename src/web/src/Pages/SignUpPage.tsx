@@ -34,9 +34,6 @@ export default function SignUpPage() {
         event.preventDefault();
         setLoading(true);
 
-        const data = new FormData(event.currentTarget);
-        const userName = data.get("userName")?.toString() || "";
-        const password = data.get("password")?.toString() || "";
         try {
             const api = new ApiClient();
             let response: RegistrationResponseDto = await api.identity.postApiIdentitySignup({
@@ -50,14 +47,7 @@ export default function SignUpPage() {
             }
         } catch (err: any) {
             let exception = err as ApiError;
-            switch (exception.status) {
-                case 400:
-                    console.log(JSON.stringify(exception));
-                    setErrors(exception?.body?.errors?.map((err: any) => err.description));
-                    break;
-                default:
-                    setErrors([exception.message]);
-            }
+            setErrors([exception.message]);
         } finally {
             setLoading(false);
         }

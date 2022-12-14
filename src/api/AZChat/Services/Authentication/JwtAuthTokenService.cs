@@ -33,8 +33,11 @@ public class JwtAuthTokenService : IAuthTokenService
         List<Claim> claims = new List<Claim>()
         {
             new(JwtRegisteredClaimNames.Sub, user.Id),
+            new (CustomClaims.UserId, user.Id),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtRegisteredClaimNames.Name, user.UserName)
+            new(JwtRegisteredClaimNames.Name, user.UserName),
+            new (ClaimTypes.Name, user.UserName),
+            new (ClaimTypes.NameIdentifier, user.UserName),
         };
 
         SecurityTokenDescriptor tokenDescriptor = new()
