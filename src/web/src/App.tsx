@@ -6,11 +6,12 @@ import "./App.css";
 import Layout from "./Pages/Layout";
 import SignInPage from "./Pages/SignInPage";
 import SignUpPage from "./Pages/SignUpPage";
-import HomePage from "./Pages/HomePage";
+import MainPageLayout from "./Pages/MainPageLayout";
 import Forbidden from "./Pages/Forbidden";
 import { AuthProvider } from "./context/AuthProvider";
 import RequireAuth from "./components/RequireAuth";
 import RequireNoAuth from "./components/RequireNoAuth";
+import Profile from "./Pages/Profile";
 
 const theme: Theme = createTheme({
     palette: {
@@ -31,7 +32,9 @@ function App() {
                         <Route path="/forbidden" element={<Forbidden />} />
 
                         <Route element={<RequireAuth />}>
-                            <Route path="/" element={<HomePage />} />
+                            <Route path="/" element={<MainPageLayout />}>
+                                <Route path="/profile" element={<Profile />} />
+                            </Route>
                         </Route>
 
                         <Route path="*" element={<Navigate to="/" />} />
