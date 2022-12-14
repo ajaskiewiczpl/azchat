@@ -3,12 +3,12 @@ import { redirect, useNavigate, Route, Routes, Navigate } from "react-router-dom
 import { ThemeProvider, createTheme, Theme } from "@mui/material/styles";
 import blue from "@mui/material/colors/blue";
 import "./App.css";
-import { SignInPage } from "./pages/SignInPage";
-import SignUpPage from "./pages/SignUpPage";
-import HomePage from "./pages/HomePage";
-import Forbidden from "./pages/Forbidden";
+import Layout from "./Pages/Layout";
+import SignInPage from "./Pages/SignInPage";
+import SignUpPage from "./Pages/SignUpPage";
+import HomePage from "./Pages/HomePage";
+import Forbidden from "./Pages/Forbidden";
 import { AuthProvider } from "./context/AuthProvider";
-import Layout from "./pages/Layout";
 import RequireAuth from "./components/RequireAuth";
 import RequireNoAuth from "./components/RequireNoAuth";
 

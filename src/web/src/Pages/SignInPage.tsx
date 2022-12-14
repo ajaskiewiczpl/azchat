@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Alert, Avatar, Button, Card, Grid, Snackbar, TextField, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -10,7 +10,7 @@ import { ApiError } from "../api/generated/core/ApiError";
 import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
 import useAuth from "../hooks/useAuth";
 
-export const SignInPage = () => {
+const SignInPage = () => {
     const { persistToken } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
