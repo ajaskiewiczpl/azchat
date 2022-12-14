@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
 import { ApiClient } from "../api/ApiClient";
 import { OpenAPI } from "../api/generated";
-import useLogout from "../Hooks/useLogout";
+import useLogout from "../hooks/useLogout";
 
 type Props = {};
 

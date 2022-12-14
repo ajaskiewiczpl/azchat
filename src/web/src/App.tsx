@@ -8,9 +8,9 @@ import SignInPage from "./Pages/SignInPage";
 import SignUpPage from "./Pages/SignUpPage";
 import HomePage from "./Pages/HomePage";
 import Forbidden from "./Pages/Forbidden";
-import { AuthProvider } from "./Context/AuthProvider";
-import RequireAuth from "./Components/RequireAuth";
-import RequireNoAuth from "./Components/RequireNoAuth";
+import { AuthProvider } from "./context/AuthProvider";
+import RequireAuth from "./components/RequireAuth";
+import RequireNoAuth from "./components/RequireNoAuth";
 
 const theme: Theme = createTheme({
     palette: {

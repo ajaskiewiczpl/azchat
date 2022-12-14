@@ -2,7 +2,7 @@ import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiClient } from "../api/ApiClient";
-import useRefreshToken from "../Hooks/useRefreshToken";
+import useRefreshToken from "../hooks/useRefreshToken";
 import customHistory from "./customHistory";
 
 export type Auth = {
