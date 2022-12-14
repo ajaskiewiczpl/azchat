@@ -54,7 +54,7 @@ class Build : NukeBuild
         .Before(Compile)
         .Executes(() =>
         {
-            AbsolutePath webDirectory = SourceDirectory / "web";
+            AbsolutePath webDirectory = SourceDirectory / "testapp";
 
             NpmInstall(settings => settings
                 .SetProcessWorkingDirectory(webDirectory)
