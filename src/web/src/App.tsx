@@ -3,7 +3,7 @@ import { redirect, useNavigate, Route, Routes, Navigate } from "react-router-dom
 import { ThemeProvider, createTheme, Theme } from "@mui/material/styles";
 import blue from "@mui/material/colors/blue";
 import "./App.css";
-import SignInPage from "./pages/SignInPage";
+import { SignInPage } from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import HomePage from "./pages/HomePage";
 import Forbidden from "./pages/Forbidden";

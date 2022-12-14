@@ -10,7 +10,7 @@ import { ApiError } from "../api/generated/core/ApiError";
 import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
 import useAuth from "../hooks/useAuth";
 
-const SignInPage = () => {
+export const SignInPage = () => {
     const { persistToken } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
