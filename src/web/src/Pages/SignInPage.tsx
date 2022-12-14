@@ -10,7 +10,7 @@ import { ApiError } from "../api/generated/core/ApiError";
 import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
 import useAuth from "../hooks/useAuth";
 
-export default function SignInPage() {
+const SignInPage = () => {
     const { persistToken } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -137,4 +137,6 @@ export default function SignInPage() {
             </Box>
         </Container>
     );
-}
+};
+
+export default SignInPage;
