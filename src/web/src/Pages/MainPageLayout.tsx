@@ -21,22 +21,16 @@ import { Link } from "react-router-dom";
 import Profile from "./Profile";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
+import useAuth from "../hooks/useAuth";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
+    const { userName } = useAuth();
     const logout = useLogout();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [userName, setUserName] = useState("");
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-
-    const handleGetUserInfo = async () => {
-        try {
-            const api = new ApiClient();
-            const response = await api.userProfile.getApiUserProfile();
-            setUserName(response);
-        } catch (err) {}
-    };
 
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);
@@ -53,7 +47,6 @@ const HomePage = (props: Props) => {
     const handleLogoutClick = async () => {
         try {
             setIsLoggingOut(true);
-            closeUserMenu();
             const api = new ApiClient();
             api.request.config.WITH_CREDENTIALS = true;
             await api.identity.postApiIdentitySignout();
@@ -96,6 +89,7 @@ const HomePage = (props: Props) => {
                             open={Boolean(anchorElUser)}
                             onClose={closeUserMenu}
                         >
+                            <ListSubheader>{userName}</ListSubheader>
                             <MenuItem
                                 component={Link}
                                 to="/profile"

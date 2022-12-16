@@ -40,6 +40,7 @@ namespace AZChat
             using (var scope = app.Services.CreateScope())
             {
                 AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(2));
                 await dbContext.Database.MigrateAsync();
             }
 

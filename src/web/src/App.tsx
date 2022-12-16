@@ -13,6 +13,7 @@ import RequireAuth from "./components/RequireAuth";
 import RequireNoAuth from "./components/RequireNoAuth";
 import Profile from "./Pages/Profile";
 import Messages from "./Pages/Messages";
+import Home from "./Pages/Home";
 
 const theme: Theme = createTheme({
     palette: {
@@ -30,12 +31,13 @@ function App() {
                             <Route path="/signin" element={<SignInPage />} />
                             <Route path="/signup" element={<SignUpPage />} />
                         </Route>
-                        <Route path="/forbidden" element={<Forbidden />} />
 
                         <Route element={<RequireAuth />}>
                             <Route path="/" element={<MainPageLayout />}>
+                                <Route index element={<Home />} />
+                                <Route path="/messages/*" element={<Messages />} />
                                 <Route path="/profile" element={<Profile />} />
-                                <Route path="/messages" element={<Messages />} />
+                                <Route path="/forbidden" element={<Forbidden />} />
                             </Route>
                         </Route>
 

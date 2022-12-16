@@ -1,4 +1,5 @@
 import axios from "axios";
+import jwtDecode from "jwt-decode";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiClient } from "../api/ApiClient";
@@ -23,6 +24,10 @@ const AuthContext = createContext<Auth>({
     signOut: () => {},
 });
 
+type Jwt = {
+    name: string;
+};
+
 type Props = {
     children: any;
 };
@@ -44,6 +49,11 @@ export const AuthProvider = (props: Props) => {
         localStorage.removeItem("token");
         customHistory.replace("/signin", { from: location });
     };
+
+    useEffect(() => {
+        const { name } = jwtDecode<Jwt>(token);
+        setUserName(name);
+    }, [token]);
 
     useEffect(() => {
         const requestIntercept = axios.interceptors.request.use(
