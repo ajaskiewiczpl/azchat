@@ -5,6 +5,7 @@ import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
 import { AxiosHttpRequest } from './core/AxiosHttpRequest';
 
+import { ChatService } from './services/ChatService';
 import { IdentityService } from './services/IdentityService';
 import { UserProfileService } from './services/UserProfileService';
 
@@ -12,6 +13,7 @@ type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 
 export class GeneratedApiClient {
 
+    public readonly chat: ChatService;
     public readonly identity: IdentityService;
     public readonly userProfile: UserProfileService;
 
@@ -30,6 +32,7 @@ export class GeneratedApiClient {
             ENCODE_PATH: config?.ENCODE_PATH,
         });
 
+        this.chat = new ChatService(this.request);
         this.identity = new IdentityService(this.request);
         this.userProfile = new UserProfileService(this.request);
     }

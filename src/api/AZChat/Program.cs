@@ -4,9 +4,11 @@ using System.Text;
 using System.Text.Json;
 using AZChat.Configuration;
 using AZChat.Data.Models;
+using AZChat.Hubs;
 using AZChat.Services.Authentication;
 using AZChat.Services.Data;
 using AZChat.Services.HealthChecks;
+using AZChat.Services.Hubs.Chat;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -65,9 +67,10 @@ namespace AZChat
             });
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            builder.Services.AddScoped<IDateTime, SystemDateTime>();
-            builder.Services.AddScoped<IAuthTokenService, JwtAuthTokenService>();
-            builder.Services.AddScoped<IIdentityService, IdentityService>();
+            builder.Services.AddTransient<IDateTime, SystemDateTime>();
+            builder.Services.AddTransient<IAuthTokenService, JwtAuthTokenService>();
+            builder.Services.AddTransient<IIdentityService, IdentityService>();
+            builder.Services.AddTransient<IChatHubService, ChatHubService>();
 
             if (builder.Environment.IsDevelopment())
             {
@@ -142,6 +145,7 @@ namespace AZChat
                 .AddTransientHttpErrorPolicy(policyBuilder =>
                     policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(2), 3)));
 
+            builder.Services.AddSignalR();
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(x =>
@@ -219,6 +223,7 @@ namespace AZChat
 
             app.MapHealthChecks(ApiHealthCheck.Name);
             app.MapControllers();
+            app.MapHub<ChatHub>("/api/hub/chat");
         }
 
         private static void ConfigureLogging()

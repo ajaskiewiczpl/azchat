@@ -51,8 +51,10 @@ export const AuthProvider = (props: Props) => {
     };
 
     useEffect(() => {
-        const { name } = jwtDecode<Jwt>(token);
-        setUserName(name);
+        if (token) {
+            const { name } = jwtDecode<Jwt>(token);
+            setUserName(name);
+        }
     }, [token]);
 
     useEffect(() => {

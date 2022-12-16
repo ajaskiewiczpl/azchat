@@ -2,48 +2,86 @@ import { Box, List, ListItem, ListItemIcon, ListItemText, Paper, TextField, Typo
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AccountCircle from "@mui/icons-material/AccountCircle";
+import { ApiClient } from "../api/ApiClient";
+import { ChatHubService } from "../api/ChatHubService";
 
 const messageIncoming = "incoming";
 const messageSent = "sent";
 
+const messageStatusSent = "sent";
+const messageStatusSending = "sending";
+const messageStatusError = "error";
+
 type Message = {
-    id: number;
+    id: string;
     text: string;
     direction: string;
+    status: string;
 };
 
-const generatedMessages = Array.from(Array(80).keys()).map(
-    (key) =>
-        ({
-            id: key,
-            text: `Message ${key}`,
-            direction: key % 2 == 0 ? messageIncoming : messageSent,
-        } as Message)
-);
+type InnerConversationProps = {
+    userId: string;
+};
 
-const InnerConversation = () => {
-    const [messages, setMessages] = useState<Message[]>(generatedMessages);
+const InnerConversation = (props: InnerConversationProps) => {
+    const hub = new ChatHubService();
+    const [messages, setMessages] = useState<Message[]>([]);
     const [messageText, setMessageText] = useState("");
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
 
-    const handleMessageSend = (event: KeyboardEvent<HTMLInputElement>) => {
+    console.log("Number of messages", messages.length);
+
+    hub.onMessage((message) => {
+        setMessages((oldMessages) => [
+            ...oldMessages,
+            {
+                id: message.id || "",
+                text: message.messageText || "",
+                direction: messageIncoming,
+                status: messageStatusSent,
+            },
+        ]);
+    });
+
+    const handleMessageSend = async (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key != "Enter" || messageText.length == 0) {
             return;
         }
 
-        setMessages([
-            ...messages,
+        setMessages((oldMessages) => [
+            ...oldMessages,
             {
-                id: messages.length + 1,
+                id: (oldMessages.length + 1).toString(),
                 text: messageText,
                 direction: messageSent,
+                status: messageStatusSending,
             },
         ]);
+
+        const messageTextLocal = messageText;
         setMessageText("");
+
+        const api = new ApiClient();
+        try {
+            await api.chat.postApiChatMessagesSend({
+                recipientId: props.userId,
+                text: messageTextLocal,
+            });
+        } catch (err) {
+            alert(err);
+        }
     };
 
     useEffect(() => {
-        console.log("unmount");
+        const connectToHub = async () => {
+            try {
+                await hub.connect(props.userId);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        connectToHub();
     }, []);
 
     useEffect(() => {
@@ -53,7 +91,7 @@ const InnerConversation = () => {
     }, [messages]);
 
     return (
-        <Box sx={{ m: 2, height: "92vh", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
             <List sx={{ overflow: "auto" }}>
                 {messages.map((message, index) => {
                     return (
@@ -76,7 +114,8 @@ const InnerConversation = () => {
             <TextField
                 placeholder="..."
                 fullWidth={true}
-                sx={{ m: 1 }}
+                sx={{ mt: 2 }}
+                autoComplete="off"
                 onKeyDown={handleMessageSend}
                 value={messageText}
                 onChange={(event) => {
@@ -90,8 +129,8 @@ const InnerConversation = () => {
 export type ConversationProps = {};
 
 const Conversation = (props: ConversationProps) => {
-    const { userId } = useParams();
-    return <InnerConversation key={userId} />;
+    const { userId } = useParams<string>();
+    return <InnerConversation key={userId} userId={userId || ""} />;
 };
 
 export default Conversation;
