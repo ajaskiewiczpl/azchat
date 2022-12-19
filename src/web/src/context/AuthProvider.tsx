@@ -7,8 +7,8 @@ import useRefreshToken from "../hooks/useRefreshToken";
 import customHistory from "./customHistory";
 
 export type Auth = {
+    userId: string;
     userName: string;
-    setUserName: (u: string) => void;
     token: string;
     setToken: (t: string) => void;
     persistToken: (t: string) => void;
@@ -16,8 +16,8 @@ export type Auth = {
 };
 
 const AuthContext = createContext<Auth>({
+    userId: "",
     userName: "",
-    setUserName: () => {},
     token: "",
     setToken: (t: string) => {},
     persistToken: (t: string) => {},
@@ -25,6 +25,7 @@ const AuthContext = createContext<Auth>({
 });
 
 type Jwt = {
+    userId: string;
     name: string;
 };
 
@@ -36,6 +37,7 @@ export const AuthProvider = (props: Props) => {
     const refresh = useRefreshToken();
     const location = useLocation();
 
+    const [userId, setUserId] = useState<string>("");
     const [userName, setUserName] = useState<string>("");
     const [token, setToken] = useState<string>(localStorage.getItem("token") || "");
 
@@ -52,7 +54,8 @@ export const AuthProvider = (props: Props) => {
 
     useEffect(() => {
         if (token) {
-            const { name } = jwtDecode<Jwt>(token);
+            const { userId, name } = jwtDecode<Jwt>(token);
+            setUserId(userId);
             setUserName(name);
         }
     }, [token]);
@@ -108,7 +111,7 @@ export const AuthProvider = (props: Props) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ userName, setUserName, token, setToken, persistToken, signOut }}>
+        <AuthContext.Provider value={{ userId, userName, token, setToken, persistToken, signOut }}>
             {props.children}
         </AuthContext.Provider>
     );

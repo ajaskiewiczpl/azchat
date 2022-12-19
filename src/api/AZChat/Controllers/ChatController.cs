@@ -55,7 +55,7 @@ public class ChatController : ControllerBase
         {
             return Ok();
         }
-
+        
         await _chatHubService.SendMessageAsync(new MessageDto()
         {
             FromId = userId,

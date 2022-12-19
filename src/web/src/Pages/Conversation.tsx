@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import { ApiClient } from "../api/ApiClient";
 import { ChatHubService } from "../api/ChatHubService";
+import useAuth from "../hooks/useAuth";
 
 const messageIncoming = "incoming";
 const messageSent = "sent";
@@ -20,16 +21,21 @@ type Message = {
 };
 
 type InnerConversationProps = {
-    userId: string;
+    otherUserId: string;
 };
 
 const InnerConversation = (props: InnerConversationProps) => {
+    const { userId } = useAuth();
     const [connection, setConnection] = useState<ChatHubService | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageText, setMessageText] = useState("");
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
 
     useEffect(() => {
+        if (props.otherUserId == userId) {
+            return; // conversation with self - don't subscribe to incoming messages
+        }
+
         const connect = async () => {
             try {
                 const chatHubService = new ChatHubService();
@@ -88,7 +94,7 @@ const InnerConversation = (props: InnerConversationProps) => {
         const api = new ApiClient();
         try {
             await api.chat.postApiChatMessagesSend({
-                recipientId: props.userId,
+                recipientId: props.otherUserId,
                 text: messageTextLocal,
             });
         } catch (err) {
@@ -136,7 +142,7 @@ export type ConversationProps = {};
 
 const Conversation = (props: ConversationProps) => {
     const { userId } = useParams<string>();
-    return <InnerConversation key={userId} userId={userId || ""} />;
+    return <InnerConversation key={userId} otherUserId={userId || ""} />;
 };
 
 export default Conversation;
