@@ -153,6 +153,8 @@ public class IdentityService : IIdentityService
         
         RefreshToken? storedRefreshToken = await _appDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == refreshToken);
 
+        _logger.LogInformation("Stored refresh token: {@stored}", storedRefreshToken);
+
         if (storedRefreshToken == null)
         {
             _logger.LogInformation("Refresh token doesn't exist");
@@ -161,9 +163,11 @@ public class IdentityService : IIdentityService
 
         string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 
+        _logger.LogInformation("JTI of the old token: {jti}", jti);
+
         if (storedRefreshToken.JwtId != jti)
         {
-            _logger.LogInformation("Refresh token doesn't match JWT");
+            _logger.LogInformation("Refresh token doesn't match JWT. Refresh token: {refreshToken} Token JTI: {tokenJti}", storedRefreshToken.JwtId, jti);
             return errorResult;
         }
 

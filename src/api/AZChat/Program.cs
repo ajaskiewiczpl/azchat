@@ -4,17 +4,21 @@ using System.Text;
 using System.Text.Json;
 using AZChat.Configuration;
 using AZChat.Data.Models;
+using AZChat.Hubs;
 using AZChat.Services.Authentication;
 using AZChat.Services.Data;
 using AZChat.Services.HealthChecks;
+using AZChat.Services.Hubs.Chat;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Polly;
@@ -27,23 +31,29 @@ namespace AZChat
     {
         public static async Task Main(string[] args)
         {
-            ConfigureLogging();
+            Console.Title = "AZ Chat";
 
             WebApplicationBuilder builder = GetWebApplicationBuilder(args);
             WebApplication app = builder.Build();
-            app.Logger.LogInformation("Web app created");
+            
+            ConfigureLogging(app.Configuration);
+            
+            Log.Information("Web app created");
 
             await ConfigureApp(app);
-            app.Logger.LogInformation("Web app configured");
-            
-            app.Logger.LogInformation("Migrating database schema");
+            Log.Information("Web app configured");
+
+            Log.Information("Migrating database schema");
             using (var scope = app.Services.CreateScope())
             {
                 AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
                 await dbContext.Database.MigrateAsync();
             }
 
             // TODO cleanup RefreshTokens
+
+            Log.Information("App configured, starting");
 
             await app.RunAsync();
         }
@@ -64,9 +74,10 @@ namespace AZChat
             });
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            builder.Services.AddScoped<IDateTime, SystemDateTime>();
-            builder.Services.AddScoped<IAuthTokenService, JwtAuthTokenService>();
-            builder.Services.AddScoped<IIdentityService, IdentityService>();
+            builder.Services.AddTransient<IDateTime, SystemDateTime>();
+            builder.Services.AddTransient<IAuthTokenService, JwtAuthTokenService>();
+            builder.Services.AddTransient<IIdentityService, IdentityService>();
+            builder.Services.AddTransient<IChatHubService, ChatHubService>();
 
             if (builder.Environment.IsDevelopment())
             {
@@ -121,8 +132,20 @@ namespace AZChat
                 .AddJwtBearer(options =>
                 {
                     options.SaveToken = true;
-
                     options.TokenValidationParameters = tokenValidationParameters;
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            StringValues accessToken = context.Request.Query["access_token"];
+                            PathString path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hub/chat")))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             builder.Services.AddAuthorization();
@@ -141,6 +164,7 @@ namespace AZChat
                 .AddTransientHttpErrorPolicy(policyBuilder =>
                     policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(2), 3)));
 
+            builder.Services.AddSignalR();
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(x =>
@@ -182,7 +206,7 @@ namespace AZChat
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                app.UseCors(cors => cors.AllowCredentials().AllowAnyHeader().WithOrigins("http://localhost:3000"));
+                app.UseCors(cors => cors.AllowAnyMethod().AllowCredentials().AllowAnyHeader().WithOrigins("http://localhost:3000"));
             }
             else
             {
@@ -218,13 +242,13 @@ namespace AZChat
 
             app.MapHealthChecks(ApiHealthCheck.Name);
             app.MapControllers();
+            app.MapHub<ChatHub>("/api/hub/chat");
         }
 
-        private static void ConfigureLogging()
+        private static void ConfigureLogging(IConfiguration configuration)
         {
             Log.Logger = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss.fff} {Level}] {Message:lj}{NewLine}{Exception}")
+                .ReadFrom.Configuration(configuration)
                 .CreateLogger();
         }
     }

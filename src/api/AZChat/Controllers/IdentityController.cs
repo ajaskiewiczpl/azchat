@@ -107,7 +107,7 @@ public class IdentityController : ControllerBase
     public async Task<ActionResult<AuthenticationResponseDto>> RefreshToken(RefreshTokenRequestDto requestDto)
     {
         string? refreshToken = Request.Cookies[RefreshTokenCookieName];
-
+        
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
             _logger.LogInformation("Could not find refresh token cookie");
@@ -161,7 +161,8 @@ public class IdentityController : ControllerBase
     {
         Response.Cookies.Append(RefreshTokenCookieName, refreshToken, new CookieOptions()
         {
-            HttpOnly = true
+            HttpOnly = true,
+            SameSite = SameSiteMode.Strict
         });
     }
 }

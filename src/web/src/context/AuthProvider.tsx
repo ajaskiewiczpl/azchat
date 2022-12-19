@@ -1,4 +1,5 @@
 import axios from "axios";
+import jwtDecode from "jwt-decode";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { ApiClient } from "../api/ApiClient";
@@ -6,8 +7,8 @@ import useRefreshToken from "../hooks/useRefreshToken";
 import customHistory from "./customHistory";
 
 export type Auth = {
+    userId: string;
     userName: string;
-    setUserName: (u: string) => void;
     token: string;
     setToken: (t: string) => void;
     persistToken: (t: string) => void;
@@ -15,13 +16,18 @@ export type Auth = {
 };
 
 const AuthContext = createContext<Auth>({
+    userId: "",
     userName: "",
-    setUserName: () => {},
     token: "",
     setToken: (t: string) => {},
     persistToken: (t: string) => {},
     signOut: () => {},
 });
+
+type Jwt = {
+    userId: string;
+    name: string;
+};
 
 type Props = {
     children: any;
@@ -31,6 +37,7 @@ export const AuthProvider = (props: Props) => {
     const refresh = useRefreshToken();
     const location = useLocation();
 
+    const [userId, setUserId] = useState<string>("");
     const [userName, setUserName] = useState<string>("");
     const [token, setToken] = useState<string>(localStorage.getItem("token") || "");
 
@@ -44,6 +51,14 @@ export const AuthProvider = (props: Props) => {
         localStorage.removeItem("token");
         customHistory.replace("/signin", { from: location });
     };
+
+    useEffect(() => {
+        if (token) {
+            const { userId, name } = jwtDecode<Jwt>(token);
+            setUserId(userId);
+            setUserName(name);
+        }
+    }, [token]);
 
     useEffect(() => {
         const requestIntercept = axios.interceptors.request.use(
@@ -93,10 +108,10 @@ export const AuthProvider = (props: Props) => {
             axios.interceptors.request.eject(requestIntercept);
             axios.interceptors.response.eject(responseIntercept);
         };
-    });
+    }, []);
 
     return (
-        <AuthContext.Provider value={{ userName, setUserName, token, setToken, persistToken, signOut }}>
+        <AuthContext.Provider value={{ userId, userName, token, setToken, persistToken, signOut }}>
             {props.children}
         </AuthContext.Provider>
     );

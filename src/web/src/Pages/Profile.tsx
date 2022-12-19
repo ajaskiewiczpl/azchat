@@ -39,6 +39,7 @@ const Profile = (props: Props) => {
 
     const handleChangePassword = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setIsChangingPassword(true);
         setSuccessMessage("");
         setErrors([]);
         try {

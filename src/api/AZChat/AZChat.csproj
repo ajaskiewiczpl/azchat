@@ -25,13 +25,17 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Data\Models\" />
+    <Folder Include="Hubs\" />
     <Folder Include="Services\Data\" />
     <Folder Include="Services\HealthChecks\" />
+    <Folder Include="Services\Hubs\Chat\" />
     <Folder Include="Services\Utils\" />
   </ItemGroup>
 

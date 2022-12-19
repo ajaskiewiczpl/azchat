@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AZChat.Controllers;
 using AZChat.Data.DTOs;
 using AZChat.Data.Models;
 
@@ -9,5 +10,6 @@ public class UserMapProfile : Profile
     public UserMapProfile()
     {
         CreateMap<UserBaseRequestDto, User>();
+        CreateMap<User, FriendDto>();
     }
 }
