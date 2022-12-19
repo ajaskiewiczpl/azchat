@@ -26,9 +26,7 @@ const Messages = (props: Props) => {
         try {
             const response = await api.chat.getApiChatFriends();
             setFriends(response);
-            if (response.length > 0) {
-                navigate(`/messages/${response[0].id}`);
-            }
+            // navigate(`/messages/${response[0].id}`);
         } catch (err) {
             const ex = err as ApiError;
             if (ex) {

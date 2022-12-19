@@ -24,24 +24,48 @@ type InnerConversationProps = {
 };
 
 const InnerConversation = (props: InnerConversationProps) => {
-    const hub = new ChatHubService();
+    const [connection, setConnection] = useState<ChatHubService | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageText, setMessageText] = useState("");
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
 
-    console.log("Number of messages", messages.length);
+    useEffect(() => {
+        const connect = async () => {
+            try {
+                const chatHubService = new ChatHubService();
+                await chatHubService.connect();
+                setConnection(chatHubService);
+            } catch (err) {
+                alert("Error connecting to hub: " + err); // TODO show error
+            }
+        };
 
-    hub.onMessage((message) => {
-        setMessages((oldMessages) => [
-            ...oldMessages,
-            {
-                id: message.id || "",
-                text: message.messageText || "",
-                direction: messageIncoming,
-                status: messageStatusSent,
-            },
-        ]);
-    });
+        connect();
+    }, []);
+
+    useEffect(() => {
+        connection?.onMessage((message) => {
+            setMessages((oldMessages) => [
+                ...oldMessages,
+                {
+                    id: message.id || "",
+                    text: message.messageText || "",
+                    direction: messageIncoming,
+                    status: messageStatusSent,
+                },
+            ]);
+        });
+
+        return () => {
+            connection ? connection.disconnect() : null;
+        };
+    }, [connection]);
+
+    useEffect(() => {
+        lastMessageRef.current?.scrollIntoView({
+            behavior: "auto",
+        });
+    }, [messages]);
 
     const handleMessageSend = async (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key != "Enter" || messageText.length == 0) {
@@ -68,27 +92,9 @@ const InnerConversation = (props: InnerConversationProps) => {
                 text: messageTextLocal,
             });
         } catch (err) {
-            alert(err);
+            alert("Error while sending message: " + err);
         }
     };
-
-    useEffect(() => {
-        const connectToHub = async () => {
-            try {
-                await hub.connect(props.userId);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        connectToHub();
-    }, []);
-
-    useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({
-            behavior: "auto",
-        });
-    }, [messages]);
 
     return (
         <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>

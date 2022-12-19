@@ -105,7 +105,7 @@ export const AuthProvider = (props: Props) => {
             axios.interceptors.request.eject(requestIntercept);
             axios.interceptors.response.eject(responseIntercept);
         };
-    });
+    }, []);
 
     return (
         <AuthContext.Provider value={{ userName, setUserName, token, setToken, persistToken, signOut }}>

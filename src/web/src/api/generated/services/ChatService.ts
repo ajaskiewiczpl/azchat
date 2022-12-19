@@ -13,6 +13,17 @@ export class ChatService {
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
+     * @returns any Success
+     * @throws ApiError
+     */
+    public getApiChatTest(): CancelablePromise<any> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/Chat/test',
+        });
+    }
+
+    /**
      * @returns FriendDto Success
      * @throws ApiError
      */

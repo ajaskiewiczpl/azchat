@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AZChat.Hubs;
 
+[Authorize]
 public class ChatHub : Hub
 {
-    public async Task Connect(string userId)
-    {
-        await Groups.AddToGroupAsync(Context.ConnectionId, userId);
-    }
+
 }

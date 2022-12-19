@@ -27,6 +27,12 @@ public class ChatController : ControllerBase
         _chatHubService = chatHubService;
     }
 
+    [HttpGet("test")]
+    public async Task<ActionResult> Test()
+    {
+        return Ok();
+    }
+
     [HttpGet("friends")]
     public async Task<ActionResult<IEnumerable<FriendDto>>> GetFriends()
     {
@@ -59,7 +65,7 @@ public class ChatController : ControllerBase
 
         return Ok();
     }
-
+    
     [HttpGet("messages/latest")]
     public async Task<ActionResult<IEnumerable<MessageDto>>> GetLatestMessages()
     {
