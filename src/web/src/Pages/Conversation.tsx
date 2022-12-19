@@ -51,11 +51,15 @@ const InnerConversation = (props: InnerConversationProps) => {
 
     useEffect(() => {
         connection?.onMessage((message) => {
+            if (message.fromUserId != props.otherUserId) {
+                return;
+            }
+
             setMessages((oldMessages) => [
                 ...oldMessages,
                 {
                     id: message.id || "",
-                    text: message.messageText || "",
+                    text: message.body || "",
                     direction: messageIncoming,
                     status: messageStatusSent,
                 },
@@ -94,8 +98,8 @@ const InnerConversation = (props: InnerConversationProps) => {
         const api = new ApiClient();
         try {
             await api.chat.postApiChatMessagesSend({
-                recipientId: props.otherUserId,
-                text: messageTextLocal,
+                recipientUserId: props.otherUserId,
+                body: messageTextLocal,
             });
         } catch (err) {
             alert("Error while sending message: " + err);

@@ -15,9 +15,13 @@ public class ChatHubService : IChatHubService
         _chatContext = chatContext;
     }
     
-    public async Task SendMessageAsync(MessageDto message)
+    public async Task SendMessageAsync(string senderUserId, string recipientUserId, string body)
     {
-        IClientProxy client = _chatContext.Clients.User(message.ToId);
-        await client.SendAsync("onMessage", message);
+        IClientProxy client = _chatContext.Clients.User(recipientUserId);
+        await client.SendAsync("onMessage", new MessageDto()
+        {
+            FromUserId = senderUserId,
+            Body = body
+        });
     }
 }

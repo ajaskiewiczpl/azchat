@@ -3,6 +3,6 @@
 /* eslint-disable */
 
 export type SendMessageRequestDto = {
-    recipientId: string;
-    text: string;
+    recipientUserId: string;
+    body: string;
 };

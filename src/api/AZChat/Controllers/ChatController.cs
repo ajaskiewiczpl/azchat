@@ -49,19 +49,14 @@ public class ChatController : ControllerBase
             return BadRequest();
         }
 
-        string userId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
+        string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
 
-        if (request.RecipientId.Equals(userId))
+        if (request.RecipientUserId.Equals(currentUserId))
         {
             return Ok();
         }
         
-        await _chatHubService.SendMessageAsync(new MessageDto()
-        {
-            FromId = userId,
-            ToId = request.RecipientId,
-            MessageText = request.Text
-        });
+        await _chatHubService.SendMessageAsync(currentUserId, request.RecipientUserId, request.Body);
 
         return Ok();
     }
@@ -76,10 +71,10 @@ public class ChatController : ControllerBase
 public class SendMessageRequestDto
 {
     [Required]
-    public string RecipientId { get; set; } = null!;
+    public string RecipientUserId { get; set; } = null!;
 
     [Required]
-    public string Text { get; set; } = null!;
+    public string Body { get; set; } = null!;
 }
 
 public class FriendDto

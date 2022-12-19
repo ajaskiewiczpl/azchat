@@ -4,7 +4,6 @@
 
 export type MessageDto = {
     id?: string;
-    fromId?: string | null;
-    toId?: string | null;
-    messageText?: string | null;
+    fromUserId?: string | null;
+    body?: string | null;
 };
