@@ -68,6 +68,7 @@ namespace AZChat
             catch (Exception ex)
             {
                 Log.Fatal(ex, "Failed to start app");
+                Log.CloseAndFlush();
                 throw;
             }
         }
