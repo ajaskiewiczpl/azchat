@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -75,9 +76,11 @@ namespace AZChat
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddTransient<IDateTime, SystemDateTime>();
+            builder.Services.AddTransient<ISystemClock, SystemClock>();
             builder.Services.AddTransient<IAuthTokenService, JwtAuthTokenService>();
             builder.Services.AddTransient<IIdentityService, IdentityService>();
             builder.Services.AddTransient<IChatHubService, ChatHubService>();
+            builder.Services.AddSingleton<IMessageStorage, InMemoryMessageStorage>();
 
             if (builder.Environment.IsDevelopment())
             {

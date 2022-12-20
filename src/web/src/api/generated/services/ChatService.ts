@@ -51,13 +51,19 @@ requestBody?: SendMessageRequestDto,
     }
 
     /**
+     * @param userId 
      * @returns MessageDto Success
      * @throws ApiError
      */
-    public getApiChatMessagesLatest(): CancelablePromise<Array<MessageDto>> {
+    public getApiChatMessagesLatest(
+userId?: string,
+): CancelablePromise<Array<MessageDto>> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/Chat/messages/latest',
+            query: {
+                'userId': userId,
+            },
         });
     }
 

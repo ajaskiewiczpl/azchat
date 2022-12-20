@@ -1,4 +1,15 @@
-import { Box, List, ListItem, ListItemIcon, ListItemText, Paper, TextField, Typography } from "@mui/material";
+import {
+    Box,
+    CircularProgress,
+    Container,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Paper,
+    TextField,
+    Typography,
+} from "@mui/material";
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -27,6 +38,7 @@ type InnerConversationProps = {
 const InnerConversation = (props: InnerConversationProps) => {
     const { userId } = useAuth();
     const [connection, setConnection] = useState<ChatHubService | null>(null);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageText, setMessageText] = useState("");
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
@@ -47,6 +59,30 @@ const InnerConversation = (props: InnerConversationProps) => {
         };
 
         connect();
+    }, []);
+
+    useEffect(() => {
+        const fetchMessages = async () => {
+            try {
+                const api = new ApiClient();
+                const response = await api.chat.getApiChatMessagesLatest(props.otherUserId);
+                const messagesToAdd = response.map(
+                    (msg) =>
+                        ({
+                            id: msg.id,
+                            text: msg.body,
+                            direction: msg.fromUserId == userId ? messageSent : messageIncoming,
+                        } as Message)
+                );
+                setMessages(messagesToAdd);
+            } catch (err) {
+                alert(err); // TODO
+            } finally {
+                setIsLoadingMessages(false);
+            }
+        };
+
+        fetchMessages();
     }, []);
 
     useEffect(() => {
@@ -107,38 +143,40 @@ const InnerConversation = (props: InnerConversationProps) => {
     };
 
     return (
-        <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
-            <List sx={{ overflow: "auto" }}>
-                {messages.map((message, index) => {
-                    return (
-                        <ListItem key={message.id}>
-                            {message.direction == messageIncoming ? (
-                                <ListItemIcon sx={{ minWidth: 30 }}>
-                                    <AccountCircle />
-                                </ListItemIcon>
-                            ) : null}
-                            <ListItemText
-                                primary={message.text}
-                                sx={{ textAlign: message.direction == messageSent ? "right" : "left" }}
-                            />
-                        </ListItem>
-                    );
-                })}
-                <ListItem key="last" ref={lastMessageRef} />
-            </List>
+        <>
+            <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
+                <List sx={{ overflow: "auto" }}>
+                    {messages.map((message, index) => {
+                        return (
+                            <ListItem key={message.id}>
+                                {message.direction == messageIncoming ? (
+                                    <ListItemIcon sx={{ minWidth: 30 }}>
+                                        <AccountCircle />
+                                    </ListItemIcon>
+                                ) : null}
+                                <ListItemText
+                                    primary={message.text}
+                                    sx={{ textAlign: message.direction == messageSent ? "right" : "left" }}
+                                />
+                            </ListItem>
+                        );
+                    })}
+                    <ListItem key="last" ref={lastMessageRef} />
+                </List>
 
-            <TextField
-                placeholder="..."
-                fullWidth={true}
-                sx={{ mt: 2 }}
-                autoComplete="off"
-                onKeyDown={handleMessageSend}
-                value={messageText}
-                onChange={(event) => {
-                    setMessageText(event.target.value);
-                }}
-            />
-        </Box>
+                <TextField
+                    placeholder="..."
+                    fullWidth={true}
+                    sx={{ mt: 2 }}
+                    autoComplete="off"
+                    onKeyDown={handleMessageSend}
+                    value={messageText}
+                    onChange={(event) => {
+                        setMessageText(event.target.value);
+                    }}
+                />
+            </Box>
+        </>
     );
 };
 
