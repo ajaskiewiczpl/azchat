@@ -99,7 +99,7 @@ namespace AZChat
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
                 string? connectionString = databaseConfig[nameof(DatabaseConfiguration.SqlConnectionString)];
-                options.UseSqlServer(connectionString);
+                options.UseSqlite(connectionString);
             });
 
             builder.Services

@@ -64,7 +64,16 @@ public class IdentityService : IIdentityService
 
         if (user == null)
         {
-            throw new InvalidOperationException($"User cannot be found: ");
+            return new IdentityResult()
+            {
+                Errors = new()
+                {
+                    new IdentityError()
+                    {
+                        Description = "User doesn't exist"
+                    }
+                }
+            };
         }
 
         bool isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
