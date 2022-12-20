@@ -67,6 +67,7 @@ namespace AZChat
             }
             catch (Exception ex)
             {
+                File.WriteAllText("/home/LogFiles/crash.txt", ex.ToString());
                 Log.Fatal(ex, "Failed to start app");
                 Log.CloseAndFlush();
                 throw;
