@@ -35,33 +35,41 @@ namespace AZChat
         {
             Console.Title = "AZ Chat";
 
-            WebApplicationBuilder builder = GetWebApplicationBuilder(args);
-            WebApplication app = builder.Build();
-            
-            ConfigureLogging(app.Configuration);
-            
-            Log.Information("Web app created");
-
-            await ConfigureApp(app);
-            Log.Information("Web app configured");
-
-            using (var scope = app.Services.CreateScope())
+            try
             {
-                Log.Information("Applying SQL schema migrations");
-                AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
-                await dbContext.Database.MigrateAsync();
+                WebApplicationBuilder builder = GetWebApplicationBuilder(args);
+                WebApplication app = builder.Build();
+            
+                ConfigureLogging(app.Configuration);
+            
+                Log.Information("Web app created");
 
-                Log.Information("Configuring CosmosDb database and container");
-                ICosmosFactory cosmosFactory = scope.ServiceProvider.GetRequiredService<ICosmosFactory>();
-                await cosmosFactory.EnsureCreatedAsync();
+                await ConfigureApp(app);
+                Log.Information("Web app configured");
+
+                using (var scope = app.Services.CreateScope())
+                {
+                    Log.Information("Applying SQL schema migrations");
+                    AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+                    await dbContext.Database.MigrateAsync();
+
+                    Log.Information("Configuring CosmosDb database and container");
+                    ICosmosFactory cosmosFactory = scope.ServiceProvider.GetRequiredService<ICosmosFactory>();
+                    await cosmosFactory.EnsureCreatedAsync();
+                }
+
+                // TODO cleanup RefreshTokens
+
+                Log.Information("App configured, starting");
+
+                await app.RunAsync();
             }
-
-            // TODO cleanup RefreshTokens
-
-            Log.Information("App configured, starting");
-
-            await app.RunAsync();
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Failed to start app");
+                throw;
+            }
         }
 
         private static WebApplicationBuilder GetWebApplicationBuilder(string[] args)
