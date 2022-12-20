@@ -50,17 +50,9 @@ namespace AZChat
                 using (var scope = app.Services.CreateScope())
                 {
                     Log.Information("Applying SQL schema migrations");
-                    try
-                    {
-                        AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                        dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
-                        await dbContext.Database.MigrateAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Failed to apply SQL schema migrations");
-                        throw;
-                    }
+                    AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
+                    await dbContext.Database.MigrateAsync();
 
                     Log.Information("Configuring CosmosDb database and container");
                     ICosmosFactory cosmosFactory = scope.ServiceProvider.GetRequiredService<ICosmosFactory>();
