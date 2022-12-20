@@ -76,7 +76,7 @@ const InnerConversation = (props: InnerConversationProps) => {
                 );
                 setMessages(messagesToAdd);
             } catch (err) {
-                alert(err); // TODO
+                alert("Could not fetch messages", err); // TODO
             } finally {
                 setIsLoadingMessages(false);
             }

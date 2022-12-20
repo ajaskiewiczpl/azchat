@@ -3,6 +3,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using AZChat.Configuration;
+using AZChat.Controllers;
 using AZChat.Data.Models;
 using AZChat.Hubs;
 using AZChat.Services.Authentication;
@@ -44,12 +45,16 @@ namespace AZChat
             await ConfigureApp(app);
             Log.Information("Web app configured");
 
-            Log.Information("Migrating database schema");
             using (var scope = app.Services.CreateScope())
             {
+                Log.Information("Applying SQL schema migrations");
                 AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
                 await dbContext.Database.MigrateAsync();
+
+                Log.Information("Configuring CosmosDb database and container");
+                ICosmosFactory cosmosFactory = scope.ServiceProvider.GetRequiredService<ICosmosFactory>();
+                await cosmosFactory.EnsureCreatedAsync();
             }
 
             // TODO cleanup RefreshTokens
@@ -80,7 +85,8 @@ namespace AZChat
             builder.Services.AddTransient<IAuthTokenService, JwtAuthTokenService>();
             builder.Services.AddTransient<IIdentityService, IdentityService>();
             builder.Services.AddTransient<IChatHubService, ChatHubService>();
-            builder.Services.AddSingleton<IMessageStorage, InMemoryMessageStorage>();
+            builder.Services.AddTransient<IMessageStorage, CosmosDbMessageStorage>();
+            builder.Services.AddSingleton<ICosmosFactory, CosmosFactory>();
 
             if (builder.Environment.IsDevelopment())
             {
@@ -92,7 +98,7 @@ namespace AZChat
 
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
-                string? connectionString = databaseConfig[nameof(DatabaseConfiguration.ConnectionString)];
+                string? connectionString = databaseConfig[nameof(DatabaseConfiguration.SqlConnectionString)];
                 options.UseSqlServer(connectionString);
             });
 

@@ -4,6 +4,6 @@ namespace AZChat.Services.Data;
 
 public interface IMessageStorage
 {
-    Task AddAsync(string senderUserId, string recipientUserId, string messageBody);
+    Task AddAsync(Message message);
     Task<List<Message>> GetAsync(string userId, string otherUserId, int count);
 }

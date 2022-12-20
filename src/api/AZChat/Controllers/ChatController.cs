@@ -9,6 +9,7 @@ using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Internal;
 
 namespace AZChat.Controllers;
 
@@ -21,13 +22,15 @@ public class ChatController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IChatHubService _chatHubService;
     private readonly IMessageStorage _messageStorage;
+    private readonly ISystemClock _systemClock;
 
-    public ChatController(AppDbContext dbContext, IMapper mapper, IChatHubService chatHubService, IMessageStorage messageStorage)
+    public ChatController(AppDbContext dbContext, IMapper mapper, IChatHubService chatHubService, IMessageStorage messageStorage, ISystemClock systemClock)
     {
         _dbContext = dbContext;
         _mapper = mapper;
         _chatHubService = chatHubService;
         _messageStorage = messageStorage;
+        _systemClock = systemClock;
     }
 
     [HttpGet("test")]
@@ -54,14 +57,22 @@ public class ChatController : ControllerBase
 
         string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
 
-        await _messageStorage.AddAsync(currentUserId, request.RecipientUserId, request.Body);
+        Message message = new Message()
+        {
+            Timestamp = _systemClock.UtcNow,
+            FromUserId = currentUserId,
+            ToUserId = request.RecipientUserId,
+            Body = request.Body
+        };
+
+        await _messageStorage.AddAsync(message);
 
         if (request.RecipientUserId.Equals(currentUserId))
         {
             return Ok();
         }
 
-        await _chatHubService.SendMessageAsync(currentUserId, request.RecipientUserId, request.Body);
+        await _chatHubService.SendMessageAsync(message);
 
         return Ok();
     }

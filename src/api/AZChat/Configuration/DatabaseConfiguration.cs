@@ -4,5 +4,7 @@ public class DatabaseConfiguration
 {
     public const string SectionName = "Database";
 
-    public string ConnectionString { get; set; } = null!;
+    public string SqlConnectionString { get; set; } = null!;
+
+    public string CosmosDbConnectionString { get; set; } = null!;
 }
