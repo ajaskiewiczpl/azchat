@@ -51,7 +51,6 @@ namespace AZChat
                 {
                     Log.Information("Applying SQL schema migrations");
                     AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    dbContext.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
                     await dbContext.Database.MigrateAsync();
 
                     Log.Information("Configuring CosmosDb database and container");
@@ -67,7 +66,6 @@ namespace AZChat
             }
             catch (Exception ex)
             {
-                File.WriteAllText("/home/LogFiles/crash.txt", ex.ToString());
                 Log.Fatal(ex, "Failed to start app");
                 Log.CloseAndFlush();
                 throw;
@@ -109,7 +107,7 @@ namespace AZChat
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
                 string? connectionString = databaseConfig[nameof(DatabaseConfiguration.SqlConnectionString)];
-                options.UseSqlite(connectionString);
+                options.UseSqlServer(connectionString);
             });
 
             builder.Services
