@@ -2,37 +2,49 @@ import {
     Box,
     CircularProgress,
     Container,
+    IconButton,
     List,
     ListItem,
     ListItemIcon,
     ListItemText,
     Paper,
     TextField,
+    Tooltip,
     Typography,
 } from "@mui/material";
+import ErrorIcon from "@mui/icons-material/Error";
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import { ApiClient } from "../api/ApiClient";
 import { ChatHubService } from "../api/ChatHubService";
 import useAuth from "../hooks/useAuth";
-
-const messageIncoming = "incoming";
-const messageSent = "sent";
-
-const messageStatusSent = "sent";
-const messageStatusSending = "sending";
-const messageStatusError = "error";
-
-type Message = {
-    id: string;
-    text: string;
-    direction: string;
-    status: string;
-};
+import { MessageDto, MessageStatus } from "../api/generated";
 
 type InnerConversationProps = {
     otherUserId: string;
+};
+
+type Message = {
+    id: string;
+    status: MessageStatus;
+    timestamp: string;
+    fromUserId: string;
+    toUserId: string;
+    body: string;
+
+    error: boolean;
+};
+
+const toMessage = (message: MessageDto): Message => {
+    return {
+        id: message.id,
+        timestamp: message.timestamp,
+        status: message.status,
+        fromUserId: message.fromUserId,
+        toUserId: message.toUserId,
+        body: message.body,
+    } as Message;
 };
 
 const InnerConversation = (props: InnerConversationProps) => {
@@ -40,8 +52,8 @@ const InnerConversation = (props: InnerConversationProps) => {
     const [connection, setConnection] = useState<ChatHubService | null>(null);
     const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [messageText, setMessageText] = useState("");
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
+    const messageTextRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         // TODO instead of creating multiple hub connections, receive message from the parent Messages.tsx component
@@ -68,15 +80,10 @@ const InnerConversation = (props: InnerConversationProps) => {
             try {
                 const api = new ApiClient();
                 const response = await api.chat.getApiChatMessagesLatest(props.otherUserId);
-                const messagesToAdd = response.map(
-                    (msg) =>
-                        ({
-                            id: msg.id,
-                            text: msg.body,
-                            direction: msg.fromUserId == userId ? messageSent : messageIncoming,
-                        } as Message)
-                );
-                setMessages(messagesToAdd);
+                const receivedMessages = response.map((message) => {
+                    return toMessage(message);
+                });
+                setMessages(receivedMessages);
             } catch (err) {
                 alert("Could not fetch messages: " + err); // TODO
             } finally {
@@ -93,15 +100,7 @@ const InnerConversation = (props: InnerConversationProps) => {
                 return;
             }
 
-            setMessages((oldMessages) => [
-                ...oldMessages,
-                {
-                    id: message.id || "",
-                    text: message.body || "",
-                    direction: messageIncoming,
-                    status: messageStatusSent,
-                },
-            ]);
+            setMessages((oldMessages) => [...oldMessages, toMessage(message)]);
         });
 
         return () => {
@@ -115,70 +114,119 @@ const InnerConversation = (props: InnerConversationProps) => {
         });
     }, [messages]);
 
-    const handleMessageSend = async (event: KeyboardEvent<HTMLInputElement>) => {
-        if (event.key != "Enter" || messageText.length == 0) {
+    const handleTextFieldKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
+        const messageText = messageTextRef.current?.value;
+        if (event.key != "Enter" || messageText == undefined || messageText?.length == 0) {
             return;
         }
 
-        setMessages((oldMessages) => [
-            ...oldMessages,
-            {
-                id: (oldMessages.length + 1).toString(),
-                text: messageText,
-                direction: messageSent,
-                status: messageStatusSending,
-            },
-        ]);
+        const newMessage = {
+            id: messages.length.toString(),
+            fromUserId: userId,
+            toUserId: props.otherUserId,
+            body: messageText,
+            status: MessageStatus.SENDING,
+        } as Message;
 
-        const messageTextLocal = messageText;
-        setMessageText("");
+        messageTextRef.current!.value = "";
+        setMessages((oldMessages) => [...oldMessages, newMessage]);
 
+        await sendMessage(newMessage);
+    };
+
+    const sendMessage = async (message: Message) => {
         const api = new ApiClient();
         try {
-            await api.chat.postApiChatMessagesSend({
+            console.log("Sending message ID: ", message.id);
+            const responseMessage = await api.chat.postApiChatMessagesSend({
                 recipientUserId: props.otherUserId,
-                body: messageTextLocal,
+                body: message.body,
             });
+            updateMessage(message.id, toMessage(responseMessage), false);
         } catch (err) {
-            alert("Error while sending message: " + err);
+            updateMessage(message.id, message, true);
         }
     };
 
-    return (
-        <>
-            <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
-                <List sx={{ overflow: "auto" }}>
-                    {messages.map((message, index) => {
-                        return (
-                            <ListItem key={message.id}>
-                                {message.direction == messageIncoming ? (
-                                    <ListItemIcon sx={{ minWidth: 30 }}>
-                                        <AccountCircle />
-                                    </ListItemIcon>
-                                ) : null}
-                                <ListItemText
-                                    primary={message.text}
-                                    sx={{ textAlign: message.direction == messageSent ? "right" : "left" }}
-                                />
-                            </ListItem>
-                        );
-                    })}
-                    <ListItem key="last" ref={lastMessageRef} />
-                </List>
+    const updateMessage = (id: string, message: Message, error: boolean) => {
+        console.log("Updating message ID: " + id + " Error: " + error);
+        setMessages((oldMessages) =>
+            oldMessages.map((oldMessage) => {
+                if (oldMessage.id == id) {
+                    return {
+                        id: message.id,
+                        fromUserId: message.fromUserId,
+                        toUserId: message.toUserId,
+                        body: message.body,
+                        status: message.status,
+                        timestamp: message.timestamp,
+                        error: error,
+                    };
+                } else {
+                    return oldMessage;
+                }
+            })
+        );
+    };
 
-                <TextField
-                    placeholder="..."
-                    fullWidth={true}
-                    sx={{ mt: 2 }}
-                    autoComplete="off"
-                    onKeyDown={handleMessageSend}
-                    value={messageText}
-                    onChange={(event) => {
-                        setMessageText(event.target.value);
-                    }}
-                />
-            </Box>
-        </>
+    const renderMessage = (message: Message) => {
+        const isReceived = message.fromUserId != userId;
+
+        const renderSending = () => {
+            return <CircularProgress size={15} />;
+        };
+
+        const renderError = () => {
+            return (
+                <Tooltip title="Click to retry">
+                    <IconButton
+                        edge="end"
+                        color="error"
+                        onClick={() => {
+                            updateMessage(message.id, message, false);
+                            sendMessage(message);
+                        }}
+                    >
+                        <ErrorIcon />
+                    </IconButton>
+                </Tooltip>
+            );
+        };
+
+        return (
+            <ListItem
+                key={message.id}
+                secondaryAction={
+                    message.error ? renderError() : message.status == MessageStatus.SENDING ? renderSending() : null
+                }
+            >
+                {isReceived ? (
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                        <AccountCircle />
+                    </ListItemIcon>
+                ) : null}
+
+                <ListItemText primary={message.body} sx={{ textAlign: isReceived ? "left" : "right" }} />
+            </ListItem>
+        );
+    };
+
+    return (
+        <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
+            <List sx={{ overflow: "auto" }}>
+                {messages.map((message, index) => renderMessage(message))}
+                <ListItem key="last" ref={lastMessageRef} />
+            </List>
+
+            <TextField
+                placeholder="..."
+                inputRef={messageTextRef}
+                fullWidth={true}
+                sx={{ mt: 2 }}
+                autoComplete="off"
+                onKeyDown={handleTextFieldKeyDown}
+            />
+        </Box>
     );
 };
 

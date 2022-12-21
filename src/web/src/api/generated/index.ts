@@ -15,6 +15,7 @@ export type { ChangePasswordResponseDto } from './models/ChangePasswordResponseD
 export type { FriendDto } from './models/FriendDto';
 export type { IdentityError } from './models/IdentityError';
 export type { MessageDto } from './models/MessageDto';
+export { MessageStatus } from './models/MessageStatus';
 export type { RefreshTokenRequestDto } from './models/RefreshTokenRequestDto';
 export type { RegistrationResponseDto } from './models/RegistrationResponseDto';
 export type { SendMessageRequestDto } from './models/SendMessageRequestDto';

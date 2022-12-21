@@ -36,12 +36,12 @@ export class ChatService {
 
     /**
      * @param requestBody 
-     * @returns any Success
+     * @returns MessageDto Success
      * @throws ApiError
      */
     public postApiChatMessagesSend(
 requestBody?: SendMessageRequestDto,
-): CancelablePromise<any> {
+): CancelablePromise<MessageDto> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/Chat/messages/send',

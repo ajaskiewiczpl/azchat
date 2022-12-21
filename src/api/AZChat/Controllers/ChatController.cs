@@ -47,7 +47,7 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost("messages/send")]
-    public async Task<ActionResult> SendMessage(SendMessageRequestDto request)
+    public async Task<ActionResult<MessageDto>> SendMessage(SendMessageRequestDto request)
     {
         if (!ModelState.IsValid)
         {
@@ -66,14 +66,14 @@ public class ChatController : ControllerBase
 
         await _messageStorage.AddAsync(message);
 
-        if (request.RecipientUserId.Equals(currentUserId))
+        if (!request.RecipientUserId.Equals(currentUserId)) // recipient is the same as sender (send message to self - don't notify)
         {
-            return Ok();
+            await _chatHubService.SendMessageAsync(message);
         }
 
-        await _chatHubService.SendMessageAsync(message);
-
-        return Ok();
+        MessageDto messageDto = _mapper.Map<Message, MessageDto>(message);
+        messageDto.Status = MessageStatus.Sent;
+        return Ok(messageDto);
     }
 
     [HttpGet("messages/latest")]

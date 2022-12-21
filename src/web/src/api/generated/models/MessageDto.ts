@@ -2,10 +2,13 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { MessageStatus } from './MessageStatus';
+
 export type MessageDto = {
-    id?: string;
-    timestamp?: string;
-    fromUserId?: string | null;
-    toUserId?: string | null;
-    body?: string | null;
+    id: string;
+    status: MessageStatus;
+    timestamp: string;
+    fromUserId: string;
+    toUserId: string;
+    body: string;
 };
