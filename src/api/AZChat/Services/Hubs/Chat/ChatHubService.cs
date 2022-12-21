@@ -1,9 +1,7 @@
-﻿using System.Collections.Concurrent;
-using AutoMapper;
+﻿using AutoMapper;
 using AZChat.Data.DTOs;
 using AZChat.Data.Models;
 using AZChat.Hubs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Internal;
 

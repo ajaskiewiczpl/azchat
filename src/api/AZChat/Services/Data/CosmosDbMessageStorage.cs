@@ -32,7 +32,7 @@ public class CosmosDbMessageStorage : IMessageStorage
 
         Container container = _cosmosFactory.GetContainer();
         QueryDefinition query = new QueryDefinition(
-            $"select * from c where ((c.FromUserId = '{userId}' and c.ToUserId = '{otherUserId}') or (c.FromUserId = '{otherUserId}' and c.ToUserId = '{userId}'))");
+            $"select * from c where ((c.FromUserId = '{userId}' and c.ToUserId = '{otherUserId}') or (c.FromUserId = '{otherUserId}' and c.ToUserId = '{userId}')) order by c.Timestamp");
         FeedIterator<Message>? iterator = container.GetItemQueryIterator<Message>(query);
 
         List<Message> messages = new();

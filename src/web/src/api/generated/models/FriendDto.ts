@@ -5,4 +5,5 @@
 export type FriendDto = {
     id?: string | null;
     userName?: string | null;
+    unreadMessagesCount?: number;
 };

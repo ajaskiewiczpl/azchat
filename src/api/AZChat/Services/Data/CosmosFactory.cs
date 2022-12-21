@@ -9,19 +9,18 @@ public class CosmosFactory : ICosmosFactory
     private const string DbName = "AzChat";
     private const string MessagesContainerName = "Messages";
     
-    private readonly IOptions<DatabaseConfiguration> _dbConfig;
     private readonly CosmosClient _client;
 
     public CosmosFactory(IOptions<DatabaseConfiguration> dbConfig)
     {
-        _dbConfig = dbConfig;
-        _client = new CosmosClient(_dbConfig.Value.CosmosDbConnectionString);
+        _client = new CosmosClient(dbConfig.Value.CosmosDbConnectionString);
     }
 
     public async Task EnsureCreatedAsync()
     {
         DatabaseResponse databaseResponse = await _client.CreateDatabaseIfNotExistsAsync(DbName);
-        ContainerResponse containerResponse = await databaseResponse.Database.CreateContainerIfNotExistsAsync(MessagesContainerName, "/FromUserId");
+        ContainerResponse containerResponse =
+            await databaseResponse.Database.CreateContainerIfNotExistsAsync(MessagesContainerName, "/FromUserId");
     }
 
     public Container GetContainer()

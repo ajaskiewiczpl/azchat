@@ -7,25 +7,85 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import PersonIcon from "@mui/icons-material/Person";
 import ListItemText from "@mui/material/ListItemText";
-import { Alert, Container, Grid, makeStyles, TextField, Typography } from "@mui/material";
+import { Alert, Badge, Container, Grid, makeStyles, TextField, Typography } from "@mui/material";
 import Conversation from "./Conversation";
-import { useEffect, useState } from "react";
-import { ApiError, FriendDto } from "../api/generated";
+import { useEffect, useRef, useState } from "react";
+import { ApiError, FriendDto, MessageDto } from "../api/generated";
 import { ApiClient } from "../api/ApiClient";
+import { ChatHubService } from "../api/ChatHubService";
 
 type Props = {};
 
 const Messages = (props: Props) => {
     const navigate = useNavigate();
+    const [connection, setConnection] = useState<ChatHubService | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
     const [friends, setFriends] = useState<FriendDto[]>([]);
+    const [selectedUserId, setSelectedUserId] = useState("");
+    const selectedUserIdRef = useRef(selectedUserId); // this is to avoid capturing of "selectedUserId" value in "onMessage" function closure
 
-    const loadFriends = async () => {
+    useEffect(() => {
+        load();
+    }, []);
+
+    useEffect(() => {
+        connection?.onMessage(onMessage);
+
+        return () => {
+            connection ? connection.disconnect() : null;
+        };
+    }, [connection]);
+
+    const onMessage = (message: MessageDto) => {
+        const updateFriend = (friend: FriendDto, message: MessageDto): FriendDto => {
+            if (friend.id == message.fromUserId) {
+                return {
+                    ...friend,
+                    unreadMessagesCount: (friend?.unreadMessagesCount || 0) + 1,
+                };
+            } else {
+                return friend;
+            }
+        };
+        if (selectedUserIdRef.current == message.fromUserId) {
+            return;
+        }
+        setFriends((oldFriends) => oldFriends.map((oldFriend) => updateFriend(oldFriend, message)));
+    };
+
+    const onSelectedUserChanged = (userId: string) => {
+        const updateFriend = (friend: FriendDto): FriendDto => {
+            if (friend.id == userId) {
+                return {
+                    ...friend,
+                    unreadMessagesCount: 0,
+                };
+            } else {
+                return friend;
+            }
+        };
+        setFriends((oldFriends) => oldFriends.map((oldFriend) => updateFriend(oldFriend)));
+        setSelectedUserId(userId);
+        selectedUserIdRef.current = userId;
+    };
+
+    const connectToHub = async () => {
+        try {
+            const chatHubService = new ChatHubService();
+            await chatHubService.connect();
+            setConnection(chatHubService);
+        } catch (err) {
+            setErrorMessage("Could not connect");
+        }
+    };
+
+    const load = async () => {
         const api = new ApiClient();
         try {
             const response = await api.chat.getApiChatFriends();
             setFriends(response);
+            connectToHub();
             // navigate(`/messages/${response[0].id}`);
         } catch (err) {
             const ex = err as ApiError;
@@ -38,10 +98,6 @@ const Messages = (props: Props) => {
             setIsLoading(false);
         }
     };
-
-    useEffect(() => {
-        loadFriends();
-    }, []);
 
     const renderLoading = () => {
         return (
@@ -81,8 +137,11 @@ const Messages = (props: Props) => {
                                                 }}
                                             >
                                                 <ListItemIcon>
-                                                    <PersonIcon />
+                                                    <Badge badgeContent={friend.unreadMessagesCount} color="primary">
+                                                        <PersonIcon />
+                                                    </Badge>
                                                 </ListItemIcon>
+
                                                 <ListItemText primary={friend.userName}></ListItemText>
                                             </ListItemButton>
                                         </ListItem>
@@ -92,7 +151,10 @@ const Messages = (props: Props) => {
                         </Grid>
                         <Grid container item xs={9} direction="column">
                             <Routes>
-                                <Route path="/:userId" element={<Conversation />} />
+                                <Route
+                                    path="/:userId"
+                                    element={<Conversation selectUserId={onSelectedUserChanged} />}
+                                />
                             </Routes>
                         </Grid>
                     </Grid>

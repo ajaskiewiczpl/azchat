@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using AZChat.Controllers;
 using AZChat.Data.DTOs;
 using AZChat.Data.Models;
 

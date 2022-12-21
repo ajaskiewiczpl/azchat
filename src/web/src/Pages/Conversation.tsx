@@ -44,6 +44,8 @@ const InnerConversation = (props: InnerConversationProps) => {
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
 
     useEffect(() => {
+        // TODO instead of creating multiple hub connections, receive message from the parent Messages.tsx component
+
         if (props.otherUserId == userId) {
             return; // conversation with self - don't subscribe to incoming messages
         }
@@ -180,10 +182,17 @@ const InnerConversation = (props: InnerConversationProps) => {
     );
 };
 
-export type ConversationProps = {};
+export type ConversationProps = {
+    selectUserId: (userId: string) => void;
+};
 
 const Conversation = (props: ConversationProps) => {
     const { userId } = useParams<string>();
+
+    useEffect(() => {
+        props.selectUserId(userId || "");
+    }, [userId]);
+
     return <InnerConversation key={userId} otherUserId={userId || ""} />;
 };
 

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using AZChat.Data.DTOs;
 using AZChat.Data.Models;
@@ -85,19 +84,4 @@ public class ChatController : ControllerBase
         List<MessageDto> response = _mapper.Map<List<Message>, List<MessageDto>>(messages);
         return Ok(response);
     }
-}
-
-public class SendMessageRequestDto
-{
-    [Required]
-    public string RecipientUserId { get; set; } = null!;
-
-    [Required]
-    public string Body { get; set; } = null!;
-}
-
-public class FriendDto
-{
-    public string Id { get; set; } = null!;
-    public string UserName { get; set; } = null!;
 }
