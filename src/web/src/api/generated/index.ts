@@ -13,6 +13,7 @@ export type { AuthenticationResponseDto } from './models/AuthenticationResponseD
 export type { ChangePasswordRequestDto } from './models/ChangePasswordRequestDto';
 export type { ChangePasswordResponseDto } from './models/ChangePasswordResponseDto';
 export type { FriendDto } from './models/FriendDto';
+export type { GetMessagesResponse } from './models/GetMessagesResponse';
 export type { IdentityError } from './models/IdentityError';
 export type { MessageDto } from './models/MessageDto';
 export { MessageStatus } from './models/MessageStatus';

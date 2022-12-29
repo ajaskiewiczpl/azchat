@@ -16,7 +16,7 @@ export class ChatHubService {
                 withCredentials: false,
                 accessTokenFactory: async () => {
                     const api = new ApiClient();
-                    await api.chat.getApiChatTest(); // make dummy API call to refresh and store new token in local storage if needed
+                    await api.chat.getApiChatPing(); // make dummy API call to refresh and store new token in local storage if needed
                     return localStorage.getItem("token") || "";
                 },
             })

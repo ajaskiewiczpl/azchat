@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace AZChat.Services.Data;
+namespace AZChat.Services.Data.Sql;
 
 public class AppDbContext : IdentityDbContext<User>
 {

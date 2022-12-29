@@ -2,13 +2,13 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 
-namespace AZChat.Services.Data;
+namespace AZChat.Services.Data.CosmosDb;
 
 public class CosmosFactory : ICosmosFactory
 {
     private const string DbName = "AzChat";
     private const string MessagesContainerName = "Messages";
-    
+
     private readonly CosmosClient _client;
 
     public CosmosFactory(IOptions<DatabaseConfiguration> dbConfig)
@@ -23,7 +23,7 @@ public class CosmosFactory : ICosmosFactory
             await databaseResponse.Database.CreateContainerIfNotExistsAsync(MessagesContainerName, "/FromUserId");
     }
 
-    public Container GetContainer()
+    public Container GetMessagesContainer()
     {
         return _client.GetDatabase(DbName).GetContainer(MessagesContainerName);
     }

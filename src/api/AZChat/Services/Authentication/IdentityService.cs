@@ -3,7 +3,7 @@ using System.Security.Claims;
 using AutoMapper;
 using AZChat.Configuration;
 using AZChat.Data.Models;
-using AZChat.Services.Data;
+using AZChat.Services.Data.Sql;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

@@ -2,7 +2,8 @@
 using AutoMapper;
 using AZChat.Data.DTOs;
 using AZChat.Data.Models;
-using AZChat.Services.Data;
+using AZChat.Services.Data.CosmosDb;
+using AZChat.Services.Data.Sql;
 using AZChat.Services.Hubs.Chat;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -32,8 +33,8 @@ public class ChatController : ControllerBase
         _systemClock = systemClock;
     }
 
-    [HttpGet("test")]
-    public async Task<ActionResult> Test()
+    [HttpGet("ping")]
+    public async Task<ActionResult> Ping()
     {
         return Ok();
     }
@@ -46,7 +47,7 @@ public class ChatController : ControllerBase
         return Ok(friends);
     }
 
-    [HttpPost("messages/send")]
+    [HttpPost("send")]
     public async Task<ActionResult<MessageDto>> SendMessage(SendMessageRequestDto request)
     {
         if (!ModelState.IsValid)
@@ -76,12 +77,19 @@ public class ChatController : ControllerBase
         return Ok(messageDto);
     }
 
-    [HttpGet("messages/latest")]
-    public async Task<ActionResult<IEnumerable<MessageDto>>> GetLatestMessages(string userId)
+    [HttpGet("messages")]
+    public async Task<ActionResult<GetMessagesResponse>> GetMessages(string otherUserId, string? continuationToken = null)
     {
         string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
-        List<Message> messages = await _messageStorage.GetAsync(currentUserId, userId, 20);
-        List<MessageDto> response = _mapper.Map<List<Message>, List<MessageDto>>(messages);
+        GetMessagesResult result = await _messageStorage.GetAsync(currentUserId, otherUserId, continuationToken);
+
+        GetMessagesResponse response = new GetMessagesResponse()
+        {
+            Messages = _mapper.Map<List<Message>, List<MessageDto>>(result.Messages),
+            ContinuationToken = result.ContinuationToken,
+            HasMoreMessages = result.HasMoreMessages
+        };
+        
         return Ok(response);
     }
 }

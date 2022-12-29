@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { FriendDto } from '../models/FriendDto';
+import type { GetMessagesResponse } from '../models/GetMessagesResponse';
 import type { MessageDto } from '../models/MessageDto';
 import type { SendMessageRequestDto } from '../models/SendMessageRequestDto';
 
@@ -16,10 +17,10 @@ export class ChatService {
      * @returns any Success
      * @throws ApiError
      */
-    public getApiChatTest(): CancelablePromise<any> {
+    public getApiChatPing(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/api/Chat/test',
+            url: '/api/Chat/ping',
         });
     }
 
@@ -39,30 +40,33 @@ export class ChatService {
      * @returns MessageDto Success
      * @throws ApiError
      */
-    public postApiChatMessagesSend(
+    public postApiChatSend(
 requestBody?: SendMessageRequestDto,
 ): CancelablePromise<MessageDto> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/api/Chat/messages/send',
+            url: '/api/Chat/send',
             body: requestBody,
             mediaType: 'application/json',
         });
     }
 
     /**
-     * @param userId 
-     * @returns MessageDto Success
+     * @param otherUserId 
+     * @param continuationToken 
+     * @returns GetMessagesResponse Success
      * @throws ApiError
      */
-    public getApiChatMessagesLatest(
-userId?: string,
-): CancelablePromise<Array<MessageDto>> {
+    public getApiChatMessages(
+otherUserId?: string,
+continuationToken?: string,
+): CancelablePromise<GetMessagesResponse> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/api/Chat/messages/latest',
+            url: '/api/Chat/messages',
             query: {
-                'userId': userId,
+                'otherUserId': otherUserId,
+                'continuationToken': continuationToken,
             },
         });
     }

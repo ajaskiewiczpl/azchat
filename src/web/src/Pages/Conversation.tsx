@@ -1,5 +1,6 @@
 import {
     Box,
+    Button,
     CircularProgress,
     Container,
     IconButton,
@@ -13,6 +14,7 @@ import {
     Typography,
 } from "@mui/material";
 import ErrorIcon from "@mui/icons-material/Error";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -20,6 +22,7 @@ import { ApiClient } from "../api/ApiClient";
 import { ChatHubService } from "../api/ChatHubService";
 import useAuth from "../hooks/useAuth";
 import { MessageDto, MessageStatus } from "../api/generated";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 type InnerConversationProps = {
     otherUserId: string;
@@ -51,6 +54,8 @@ const InnerConversation = (props: InnerConversationProps) => {
     const { userId } = useAuth();
     const [connection, setConnection] = useState<ChatHubService | null>(null);
     const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+    const [continuationToken, setContinuationToken] = useState<string | null>(null);
+    const [hasMoreMessages, setHasMoreMessages] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
     const messageTextRef = useRef<HTMLInputElement | null>(null);
@@ -76,21 +81,6 @@ const InnerConversation = (props: InnerConversationProps) => {
     }, []);
 
     useEffect(() => {
-        const fetchMessages = async () => {
-            try {
-                const api = new ApiClient();
-                const response = await api.chat.getApiChatMessagesLatest(props.otherUserId);
-                const receivedMessages = response.map((message) => {
-                    return toMessage(message);
-                });
-                setMessages(receivedMessages);
-            } catch (err) {
-                alert("Could not fetch messages: " + err); // TODO
-            } finally {
-                setIsLoadingMessages(false);
-            }
-        };
-
         fetchMessages();
     }, []);
 
@@ -113,6 +103,24 @@ const InnerConversation = (props: InnerConversationProps) => {
             behavior: "auto",
         });
     }, [messages]);
+
+    const fetchMessages = async () => {
+        try {
+            setIsLoadingMessages(true);
+            const api = new ApiClient();
+            const response = await api.chat.getApiChatMessages(props.otherUserId, continuationToken || "");
+            const receivedMessages = response.messages.map((message) => {
+                return toMessage(message);
+            });
+            setContinuationToken(response.continuationToken);
+            setHasMoreMessages(response.hasMoreMessages);
+            setMessages((currentMessages) => [...receivedMessages, ...currentMessages]);
+        } catch (err) {
+            alert("Could not fetch messages: " + err); // TODO
+        } finally {
+            setIsLoadingMessages(false);
+        }
+    };
 
     const handleTextFieldKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
         const messageText = messageTextRef.current?.value;
@@ -138,7 +146,7 @@ const InnerConversation = (props: InnerConversationProps) => {
         const api = new ApiClient();
         try {
             console.log("Sending message ID: ", message.id);
-            const responseMessage = await api.chat.postApiChatMessagesSend({
+            const responseMessage = await api.chat.postApiChatSend({
                 recipientUserId: props.otherUserId,
                 body: message.body,
             });
@@ -205,7 +213,6 @@ const InnerConversation = (props: InnerConversationProps) => {
                         <AccountCircle />
                     </ListItemIcon>
                 ) : null}
-
                 <ListItemText primary={message.body} sx={{ textAlign: isReceived ? "left" : "right" }} />
             </ListItem>
         );
@@ -213,13 +220,22 @@ const InnerConversation = (props: InnerConversationProps) => {
 
     return (
         <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
+            <LoadingButton
+                onClick={fetchMessages}
+                endIcon={<RefreshIcon />}
+                loadingPosition="center"
+                loading={isLoadingMessages}
+                sx={{ display: hasMoreMessages || isLoadingMessages ? "flex" : "none" }}
+            >
+                Load more
+            </LoadingButton>
             <List sx={{ overflow: "auto" }}>
                 {messages.map((message, index) => renderMessage(message))}
                 <ListItem key="last" ref={lastMessageRef} />
             </List>
 
             <TextField
-                placeholder="..."
+                placeholder="Type message"
                 inputRef={messageTextRef}
                 fullWidth={true}
                 sx={{ mt: 2 }}
