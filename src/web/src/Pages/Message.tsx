@@ -9,6 +9,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { ApiClient } from "../api/ApiClient";
+import moment from "moment";
 
 export type MessageProps = {
     userId: string;
@@ -20,6 +21,7 @@ export type MessageProps = {
 const Message = (props: MessageProps) => {
     const [isSending, setIsSending] = useState(props.message.status == MessageStatus.SENDING);
     const [error, setError] = useState(false);
+    const [isMouseOver, setIsMouseOver] = useState(false);
     const isReceived = props.message.fromUserId != props.userId; // true if received, false if sent
 
     useEffect(() => {
@@ -49,7 +51,15 @@ const Message = (props: MessageProps) => {
         }
     };
 
-    const renderSending = () => {
+    const handleMouseOver = () => {
+        setIsMouseOver(true);
+    };
+
+    const handleMouseOut = () => {
+        setIsMouseOver(false);
+    };
+
+    const renderSendProgress = () => {
         return <CircularProgress size={15} />;
     };
 
@@ -64,13 +74,22 @@ const Message = (props: MessageProps) => {
     };
 
     return (
-        <ListItem key={props.message.id} secondaryAction={error ? renderError() : isSending ? renderSending() : null}>
+        <ListItem
+            onMouseOver={handleMouseOver}
+            onMouseOut={handleMouseOut}
+            key={props.message.id}
+            secondaryAction={error ? renderError() : isSending ? renderSendProgress() : null}
+        >
             {isReceived ? (
                 <ListItemIcon sx={{ minWidth: 30 }}>
                     <AccountCircle />
                 </ListItemIcon>
             ) : null}
-            <ListItemText primary={props.message.body} sx={{ textAlign: isReceived ? "left" : "right" }} />
+            <ListItemText
+                primary={props.message.body}
+                secondary={isMouseOver ? moment(props.message.timestamp).format("LLLL") : null}
+                sx={{ textAlign: isReceived ? "left" : "right" }}
+            />
         </ListItem>
     );
 };
