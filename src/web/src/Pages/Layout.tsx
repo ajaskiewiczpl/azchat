@@ -1,14 +1,14 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
+import React from "react";
+import { Outlet } from "react-router-dom";
 
-type Props = {}
+type Props = {};
 
-function Layout({ }: Props) {
+function Layout({}: Props) {
     return (
         <main>
             <Outlet />
         </main>
-    )
+    );
 }
 
-export default Layout
+export default Layout;

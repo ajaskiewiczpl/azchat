@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using AZChat.Data.DTOs;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 
 namespace AZChat.Data.Models;
@@ -15,4 +16,6 @@ public class Message
     public string ToUserId { get; set; } = null!;
 
     public string Body { get; set; } = null!;
+
+    public MessageStatus Status { get; set; } = MessageStatus.Sent;
 }

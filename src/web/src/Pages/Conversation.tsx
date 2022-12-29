@@ -13,41 +13,18 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
-import ErrorIcon from "@mui/icons-material/Error";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 import { ApiClient } from "../api/ApiClient";
 import { ChatHubService } from "../api/ChatHubService";
 import useAuth from "../hooks/useAuth";
 import { MessageDto, MessageStatus } from "../api/generated";
 import LoadingButton from "@mui/lab/LoadingButton";
+import Message from "./Message";
 
 type InnerConversationProps = {
     otherUserId: string;
-};
-
-type Message = {
-    id: string;
-    status: MessageStatus;
-    timestamp: string;
-    fromUserId: string;
-    toUserId: string;
-    body: string;
-
-    error: boolean;
-};
-
-const toMessage = (message: MessageDto): Message => {
-    return {
-        id: message.id,
-        timestamp: message.timestamp,
-        status: message.status,
-        fromUserId: message.fromUserId,
-        toUserId: message.toUserId,
-        body: message.body,
-    } as Message;
 };
 
 const InnerConversation = (props: InnerConversationProps) => {
@@ -56,7 +33,7 @@ const InnerConversation = (props: InnerConversationProps) => {
     const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const [continuationToken, setContinuationToken] = useState<string | null>(null);
     const [hasMoreMessages, setHasMoreMessages] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<MessageDto[]>([]);
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
     const messageTextRef = useRef<HTMLInputElement | null>(null);
 
@@ -90,7 +67,7 @@ const InnerConversation = (props: InnerConversationProps) => {
                 return;
             }
 
-            setMessages((oldMessages) => [...oldMessages, toMessage(message)]);
+            setMessages((oldMessages) => [...oldMessages, message]);
         });
 
         return () => {
@@ -109,12 +86,9 @@ const InnerConversation = (props: InnerConversationProps) => {
             setIsLoadingMessages(true);
             const api = new ApiClient();
             const response = await api.chat.getApiChatMessages(props.otherUserId, continuationToken || "");
-            const receivedMessages = response.messages.map((message) => {
-                return toMessage(message);
-            });
             setContinuationToken(response.continuationToken);
             setHasMoreMessages(response.hasMoreMessages);
-            setMessages((currentMessages) => [...receivedMessages, ...currentMessages]);
+            setMessages((currentMessages) => [...response.messages, ...currentMessages]);
         } catch (err) {
             alert("Could not fetch messages: " + err); // TODO
         } finally {
@@ -129,35 +103,18 @@ const InnerConversation = (props: InnerConversationProps) => {
         }
 
         const newMessage = {
-            id: messages.length.toString(),
+            id: crypto.randomUUID(),
             fromUserId: userId,
             toUserId: props.otherUserId,
             body: messageText,
-            status: MessageStatus.SENDING,
-        } as Message;
+            status: MessageStatus.NEW,
+        } as MessageDto;
 
         messageTextRef.current!.value = "";
         setMessages((oldMessages) => [...oldMessages, newMessage]);
-
-        await sendMessage(newMessage);
     };
 
-    const sendMessage = async (message: Message) => {
-        const api = new ApiClient();
-        try {
-            console.log("Sending message ID: ", message.id);
-            const responseMessage = await api.chat.postApiChatSend({
-                recipientUserId: props.otherUserId,
-                body: message.body,
-            });
-            updateMessage(message.id, toMessage(responseMessage), false);
-        } catch (err) {
-            updateMessage(message.id, message, true);
-        }
-    };
-
-    const updateMessage = (id: string, message: Message, error: boolean) => {
-        console.log("Updating message ID: " + id + " Error: " + error);
+    const updateMessage = (id: string, message: MessageDto) => {
         setMessages((oldMessages) =>
             oldMessages.map((oldMessage) => {
                 if (oldMessage.id == id) {
@@ -168,53 +125,11 @@ const InnerConversation = (props: InnerConversationProps) => {
                         body: message.body,
                         status: message.status,
                         timestamp: message.timestamp,
-                        error: error,
                     };
                 } else {
                     return oldMessage;
                 }
             })
-        );
-    };
-
-    const renderMessage = (message: Message) => {
-        const isReceived = message.fromUserId != userId;
-
-        const renderSending = () => {
-            return <CircularProgress size={15} />;
-        };
-
-        const renderError = () => {
-            return (
-                <Tooltip title="Click to retry">
-                    <IconButton
-                        edge="end"
-                        color="error"
-                        onClick={() => {
-                            updateMessage(message.id, message, false);
-                            sendMessage(message);
-                        }}
-                    >
-                        <ErrorIcon />
-                    </IconButton>
-                </Tooltip>
-            );
-        };
-
-        return (
-            <ListItem
-                key={message.id}
-                secondaryAction={
-                    message.error ? renderError() : message.status == MessageStatus.SENDING ? renderSending() : null
-                }
-            >
-                {isReceived ? (
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                        <AccountCircle />
-                    </ListItemIcon>
-                ) : null}
-                <ListItemText primary={message.body} sx={{ textAlign: isReceived ? "left" : "right" }} />
-            </ListItem>
         );
     };
 
@@ -230,7 +145,14 @@ const InnerConversation = (props: InnerConversationProps) => {
                 Load more
             </LoadingButton>
             <List sx={{ overflow: "auto" }}>
-                {messages.map((message, index) => renderMessage(message))}
+                {messages.map((message) => (
+                    <Message
+                        userId={userId}
+                        otherUserId={props.otherUserId}
+                        message={message}
+                        updateMessage={updateMessage}
+                    />
+                ))}
                 <ListItem key="last" ref={lastMessageRef} />
             </List>
 
