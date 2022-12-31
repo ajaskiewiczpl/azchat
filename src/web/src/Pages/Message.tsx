@@ -85,11 +85,7 @@ const Message = (props: MessageProps) => {
                     <AccountCircle />
                 </ListItemIcon>
             ) : null}
-            <ListItemText
-                primary={props.message.body}
-                secondary={isMouseOver ? moment(props.message.timestamp).format("LLLL") : null}
-                sx={{ textAlign: isReceived ? "left" : "right" }}
-            />
+            <ListItemText primary={props.message.body} sx={{ textAlign: isReceived ? "left" : "right" }} />
         </ListItem>
     );
 };

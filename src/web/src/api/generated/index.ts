@@ -24,4 +24,4 @@ export type { UserBaseRequestDto } from './models/UserBaseRequestDto';
 
 export { ChatService } from './services/ChatService';
 export { IdentityService } from './services/IdentityService';
-export { UserProfileService } from './services/UserProfileService';
+export { ProfileService } from './services/ProfileService';

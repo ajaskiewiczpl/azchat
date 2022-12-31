@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError, FriendDto, MessageDto } from "../api/generated";
 import { ApiClient } from "../api/ApiClient";
 import { ChatHubService } from "../api/ChatHubService";
+import UserAvatar from "../components/UserAvatar";
 
 type Props = {};
 
@@ -138,7 +139,12 @@ const Messages = (props: Props) => {
                                             >
                                                 <ListItemIcon>
                                                     <Badge badgeContent={friend.unreadMessagesCount} color="primary">
-                                                        <PersonIcon />
+                                                        <UserAvatar
+                                                            userId={friend.id}
+                                                            userName={friend.userName}
+                                                            width={32}
+                                                            height={32}
+                                                        />
                                                     </Badge>
                                                 </ListItemIcon>
 

@@ -14,6 +14,7 @@ import RequireNoAuth from "./components/RequireNoAuth";
 import Profile from "./Pages/Profile";
 import Messages from "./Pages/Messages";
 import Home from "./Pages/Home";
+import Settings from "./Pages/Settings";
 
 const theme: Theme = createTheme({
     palette: {
@@ -37,6 +38,7 @@ function App() {
                                 <Route index element={<Home />} />
                                 <Route path="/messages/*" element={<Messages />} />
                                 <Route path="/profile" element={<Profile />} />
+                                <Route path="/settings" element={<Settings />} />
                                 <Route path="/forbidden" element={<Forbidden />} />
                             </Route>
                         </Route>

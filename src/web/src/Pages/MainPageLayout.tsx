@@ -6,6 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import AccountCircle from "@mui/icons-material/AccountCircle";
+import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import NotificationIcon from "@mui/icons-material/Notifications";
 import { useEffect, useState } from "react";
@@ -23,11 +24,12 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import useAuth from "../hooks/useAuth";
+import UserAvatar from "../components/UserAvatar";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
-    const { userName } = useAuth();
+    const { userId, userName } = useAuth();
     const logout = useLogout();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -38,10 +40,6 @@ const HomePage = (props: Props) => {
 
     const closeUserMenu = () => {
         setAnchorElUser(null);
-    };
-
-    const handleUserProfileClick = () => {
-        closeUserMenu();
     };
 
     const handleLogoutClick = async () => {
@@ -71,7 +69,7 @@ const HomePage = (props: Props) => {
                                 </Badge>
                             </IconButton> */}
                         <IconButton color="inherit" onClick={handleOpenUserMenu}>
-                            <AccountCircle />
+                            <UserAvatar userId={userId} userName={userName} width={32} height={32} />
                         </IconButton>
                         <Menu
                             sx={{ mt: "45px" }}
@@ -94,13 +92,25 @@ const HomePage = (props: Props) => {
                                 component={Link}
                                 to="/profile"
                                 key="profile"
-                                onClick={handleUserProfileClick}
+                                onClick={closeUserMenu}
                                 disabled={isLoggingOut}
                             >
                                 <ListItemIcon>
                                     <AccountCircle />
                                 </ListItemIcon>
                                 <ListItemText>Profile</ListItemText>
+                            </MenuItem>
+                            <MenuItem
+                                component={Link}
+                                to="/settings"
+                                key="settings"
+                                onClick={closeUserMenu}
+                                disabled={isLoggingOut}
+                            >
+                                <ListItemIcon>
+                                    <SettingsIcon />
+                                </ListItemIcon>
+                                <ListItemText>Settings</ListItemText>
                             </MenuItem>
                             <MenuItem key="signout" onClick={handleLogoutClick} disabled={isLoggingOut}>
                                 <ListItemIcon>

@@ -1,7 +1,8 @@
 import Container from "@mui/material/Container";
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import Stack from "@mui/material/Stack";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
@@ -12,127 +13,45 @@ import KeyIcon from "@mui/icons-material/Key";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import { ApiError } from "../api/generated";
+import useAuth from "../hooks/useAuth";
+import axios from "axios";
+import Avatar from "@mui/material/Avatar";
+import deepOrange from "@mui/material/colors/deepOrange";
+import UserAvatar from "../components/UserAvatar";
+import IconButton from "@mui/material/IconButton";
 
 type Props = {};
 
 const Profile = (props: Props) => {
-    const [successMessage, setSuccessMessage] = useState("");
-    const [errors, setErrors] = useState<string[]>([]);
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
-    const [passwordMatch, setPasswordMatch] = useState(true);
-    const [canChangePassword, setCanChangePassword] = useState(false);
-    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const { userId, userName } = useAuth();
+    const [uploading, setUploading] = useState(false);
 
-    const success = successMessage.length > 0;
-    const error = errors.length > 0;
-
-    useEffect(() => {
-        if (newPassword.length > 0) {
-            setPasswordMatch(newPassword == newPasswordRepeat);
-        }
-
-        const result = currentPassword.length > 0 && newPassword.length > 0 && newPassword == newPasswordRepeat;
-        setCanChangePassword(result);
-    }, [currentPassword, newPassword, newPasswordRepeat]);
-
-    const handleChangePassword = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setIsChangingPassword(true);
-        setSuccessMessage("");
-        setErrors([]);
+    const onAvatarSelected = async (e: ChangeEvent<HTMLInputElement>) => {
         try {
+            setUploading(true);
+            const file = e.target.files?.[0];
             const api = new ApiClient();
-            await api.identity.postApiIdentityChangepassword({
-                currentPassword: currentPassword,
-                newPassword: newPassword,
+            const response = await api.profile.postApiProfileAvatar({
+                file: file,
             });
-            setSuccessMessage("Password successfully changed");
         } catch (err) {
-            let exception = err as ApiError;
-            switch (exception.status) {
-                case 400:
-                    setErrors(exception?.body?.errors?.map((err: any) => err.description));
-                    break;
-                default:
-                    setErrors([exception.message]);
-            }
+            console.error(err); // TODO
         } finally {
-            setIsChangingPassword(false);
-            setCurrentPassword("");
-            setNewPassword("");
-            setNewPasswordRepeat("");
+            setUploading(false);
         }
     };
 
     return (
         <Container maxWidth="sm">
-            <Paper sx={{ mt: 1, p: 2 }}>
-                <Stack spacing={2}>
-                    <Typography variant="h4">Profile Settings</Typography>
-                    <Typography variant="h6">Change Password</Typography>
-                    <Box component="form" onSubmit={handleChangePassword}>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="currentPassword"
-                            label="Current Password"
-                            type="password"
-                            disabled={isChangingPassword}
-                            onChange={(event) => {
-                                setCurrentPassword(event.target.value);
-                            }}
-                            value={currentPassword}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="newPassword"
-                            label="New Password"
-                            type="password"
-                            disabled={isChangingPassword}
-                            onChange={(event) => {
-                                setNewPassword(event.target.value);
-                            }}
-                            value={newPassword}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            error={!passwordMatch}
-                            helperText={passwordMatch ? "" : "Passwords are different"}
-                            fullWidth
-                            name="newPasswordRepeat"
-                            label="Repeat New Password"
-                            type="password"
-                            disabled={isChangingPassword}
-                            onChange={(event) => {
-                                setNewPasswordRepeat(event.target.value);
-                            }}
-                            value={newPasswordRepeat}
-                        />
-                        <Alert severity="error" sx={{ mt: 2, display: error ? "flex" : "none" }}>
-                            {errors}
-                        </Alert>
-                        <Alert severity="success" sx={{ mt: 2, display: success ? "flex" : "none" }}>
-                            {successMessage}
-                        </Alert>
-                        <LoadingButton
-                            type="submit"
-                            fullWidth
-                            endIcon={<KeyIcon />}
-                            loadingPosition="end"
-                            loading={isChangingPassword}
-                            variant="contained"
-                            disabled={!canChangePassword}
-                            sx={{ mt: 3, mb: 2 }}
-                        >
-                            Change Password
-                        </LoadingButton>
-                    </Box>
+            <Paper elevation={4} sx={{ m: 2, p: 2 }}>
+                <Typography variant="h6">Your Avatar</Typography>
+                <Stack direction="row" alignItems="center" spacing={2}>
+                    <UserAvatar userId={userId} userName={userName} width={48} height={48} />
+
+                    <IconButton color="primary" component="label">
+                        <input hidden disabled={uploading} accept="image/*" type="file" onChange={onAvatarSelected} />
+                        <CloudUploadIcon />
+                    </IconButton>
                 </Stack>
             </Paper>
         </Container>

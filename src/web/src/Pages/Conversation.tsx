@@ -147,6 +147,7 @@ const InnerConversation = (props: InnerConversationProps) => {
             <List sx={{ overflow: "auto" }}>
                 {messages.map((message) => (
                     <Message
+                        key={message.id}
                         userId={userId}
                         otherUserId={props.otherUserId}
                         message={message}

@@ -2,9 +2,27 @@ import axios from "axios";
 import jwtDecode from "jwt-decode";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { ApiClient } from "../api/ApiClient";
 import useRefreshToken from "../hooks/useRefreshToken";
 import customHistory from "./customHistory";
+
+const tokenKeyName = "token";
+
+function getTokenOrEmptyString(): string {
+    return localStorage.getItem(tokenKeyName) || "";
+}
+
+function writeTokenToLocalStorage(token: string) {
+    localStorage.setItem(tokenKeyName, token);
+}
+
+function removeTokenFromLocalStorage() {
+    localStorage.removeItem(tokenKeyName);
+}
+
+type Jwt = {
+    userId: string;
+    name: string;
+};
 
 export type Auth = {
     userId: string;
@@ -24,11 +42,6 @@ const AuthContext = createContext<Auth>({
     signOut: () => {},
 });
 
-type Jwt = {
-    userId: string;
-    name: string;
-};
-
 type Props = {
     children: any;
 };
@@ -37,20 +50,29 @@ export const AuthProvider = (props: Props) => {
     const refresh = useRefreshToken();
     const location = useLocation();
 
-    const [userId, setUserId] = useState<string>("");
-    const [userName, setUserName] = useState<string>("");
-    const [token, setToken] = useState<string>(localStorage.getItem("token") || "");
-
-    const persistToken = (token: string) => {
-        localStorage.setItem("token", token);
-        setToken(token);
+    const getUserIdFromToken = () => {
+        const jwt = getTokenOrEmptyString();
+        if (jwt.length > 0) {
+            const { userId } = jwtDecode<Jwt>(jwt);
+            return userId;
+        } else {
+            return "";
+        }
     };
 
-    const signOut = () => {
-        setToken("");
-        localStorage.removeItem("token");
-        customHistory.replace("/signin", { from: location });
+    const getUserNameFromToken = () => {
+        const jwt = getTokenOrEmptyString();
+        if (jwt.length > 0) {
+            const { name } = jwtDecode<Jwt>(jwt);
+            return name;
+        } else {
+            return "";
+        }
     };
+
+    const [userId, setUserId] = useState<string>(getUserIdFromToken());
+    const [userName, setUserName] = useState<string>(getUserNameFromToken());
+    const [token, setToken] = useState<string>(getTokenOrEmptyString());
 
     useEffect(() => {
         if (token) {
@@ -60,6 +82,17 @@ export const AuthProvider = (props: Props) => {
         }
     }, [token]);
 
+    const persistToken = (token: string) => {
+        writeTokenToLocalStorage(token);
+        setToken(token);
+    };
+
+    const signOut = () => {
+        setToken("");
+        removeTokenFromLocalStorage();
+        customHistory.replace("/signin", { from: location });
+    };
+
     useEffect(() => {
         const requestIntercept = axios.interceptors.request.use(
             (config) => {
@@ -67,7 +100,7 @@ export const AuthProvider = (props: Props) => {
                     return config;
                 }
 
-                const tokenToUse = localStorage.getItem("token") || "";
+                const tokenToUse = getTokenOrEmptyString();
                 if (!config.headers) {
                     config.headers = {};
                 }

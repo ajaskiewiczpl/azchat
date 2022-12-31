@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type FriendDto = {
-    id?: string | null;
-    userName?: string | null;
-    unreadMessagesCount?: number;
+    id: string;
+    userName: string;
+    unreadMessagesCount: number;
 };
