@@ -1,5 +1,4 @@
 ﻿using AZChat.Configuration;
-using Azure.Storage;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Options;
 

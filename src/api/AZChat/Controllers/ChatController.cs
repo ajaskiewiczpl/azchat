@@ -1,11 +1,9 @@
-﻿using System.Collections.Concurrent;
-using AutoMapper;
+﻿using AutoMapper;
 using AZChat.Data.DTOs;
 using AZChat.Data.Models;
 using AZChat.Services.Data.CosmosDb;
 using AZChat.Services.Data.Sql;
 using AZChat.Services.Hubs.Chat;
-using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +14,7 @@ namespace AZChat.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class ChatController : ControllerBase
+public class ChatController : BaseController
 {
     private readonly AppDbContext _dbContext;
     private readonly IMapper _mapper;
@@ -54,20 +52,18 @@ public class ChatController : ControllerBase
         {
             return BadRequest();
         }
-
-        string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
-
+        
         Message message = new Message()
         {
             Timestamp = _systemClock.UtcNow,
-            FromUserId = currentUserId,
+            FromUserId = UserId,
             ToUserId = request.RecipientUserId,
             Body = request.Body
         };
 
         await _messageStorage.AddAsync(message);
 
-        if (!request.RecipientUserId.Equals(currentUserId)) // recipient is the same as sender (send message to self - don't notify)
+        if (!request.RecipientUserId.Equals(UserId)) // recipient is the same as sender (send message to self - don't notify)
         {
             await _chatHubService.SendMessageAsync(message);
         }
@@ -80,8 +76,7 @@ public class ChatController : ControllerBase
     [HttpGet("messages")]
     public async Task<ActionResult<GetMessagesResponse>> GetMessages(string otherUserId, string? continuationToken = null)
     {
-        string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
-        GetMessagesResult result = await _messageStorage.GetAsync(currentUserId, otherUserId, continuationToken);
+        GetMessagesResult result = await _messageStorage.GetAsync(UserId, otherUserId, continuationToken);
 
         GetMessagesResponse response = new GetMessagesResponse()
         {

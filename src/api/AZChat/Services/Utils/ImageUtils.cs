@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace AZChat.Services.Utils;
 
@@ -11,16 +12,19 @@ public class ImageUtils
         return result;
     }
 
-    public static Image Resize(Image img, float maxDimensions)
+    public static async Task<MemoryStream> ResizeAsPngAsync(Stream stream, int width, int height)
     {
-        if (img.Size.Width > maxDimensions || img.Size.Height > maxDimensions)
+        Image img = await Image.LoadAsync(stream);
+
+        img.Mutate(x => x.Resize(new ResizeOptions()
         {
-            float scale = Math.Min(maxDimensions / img.Size.Width, maxDimensions / img.Size.Height);
-            return new Bitmap(img, new Size((int)(img.Size.Width * scale), (int)(img.Size.Height * scale)));
-        }
-        else
-        {
-            return img;
-        }
+            Size = new Size(width, height),
+            Mode = ResizeMode.Max
+        }));
+
+        MemoryStream memoryStream = new MemoryStream();
+        await img.SaveAsPngAsync(memoryStream);
+
+        return memoryStream;
     }
 }

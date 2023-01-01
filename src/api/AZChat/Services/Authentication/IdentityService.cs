@@ -6,7 +6,6 @@ using AZChat.Data.Models;
 using AZChat.Services.Data.Sql;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

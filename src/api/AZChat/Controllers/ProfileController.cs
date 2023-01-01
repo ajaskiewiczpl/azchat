@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using AZChat.Services.Data.Blob;
+﻿using AZChat.Services.Data.Blob;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +8,7 @@ namespace AZChat.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class ProfileController : ControllerBase
+public class ProfileController : BaseController
 {
     private readonly IAvatarService _avatarService;
 
@@ -44,19 +42,14 @@ public class ProfileController : ControllerBase
             return BadRequest();
         }
 
-        using (Stream inputFileStream = file.OpenReadStream())
-        using (MemoryStream ms = new MemoryStream())
-        {
-            Image avatar = _avatarService.CreateAvatar(inputFileStream);
-            avatar.Save(ms, ImageFormat.Png);
-            
-            string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
-            ms.Seek(0, SeekOrigin.Begin);
-            await _avatarService.UploadAvatarAsync(currentUserId, ms);
+        await using Stream inputFileStream = file.OpenReadStream();
+        await using MemoryStream avatarStream = await _avatarService.CreateAvatarAsync(inputFileStream);
+        avatarStream.Seek(0, SeekOrigin.Begin);
+        await _avatarService.UploadAvatarAsync(UserId, avatarStream);
 
-            string imageBase64 = ImageUtils.ToBase64Png(ms.GetBuffer());
-            return Ok(imageBase64);
-        }
+        string imageBase64 = ImageUtils.ToBase64Png(avatarStream.GetBuffer());
+
+        return Ok(imageBase64);
     }
 
     [HttpDelete("avatar")]

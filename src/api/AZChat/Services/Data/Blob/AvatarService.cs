@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using AZChat.Services.Utils;
+﻿using AZChat.Services.Utils;
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -17,11 +16,18 @@ public class AvatarService : IAvatarService
         _logger = logger;
     }
 
-    public Image CreateAvatar(Stream stream)
+    public async Task<MemoryStream> CreateAvatarAsync(Stream stream)
     {
-        Image img = Image.FromStream(stream);
-        img = ImageUtils.Resize(img, 64);
-        return img;
+        try
+        {
+            MemoryStream memoryStream = await ImageUtils.ResizeAsPngAsync(stream, 64, 64);
+            return memoryStream;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create avatar");
+            throw;
+        }
     }
 
     public async Task<byte[]> GetAvatarAsync(string userId)
