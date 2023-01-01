@@ -143,7 +143,7 @@ public class IdentityService : IIdentityService
 
         if (validatedToken == null)
         {
-            _logger.LogInformation("Invalid token");
+            _logger.LogDebug("Invalid token");
             return errorResult;
         }
 
@@ -152,7 +152,7 @@ public class IdentityService : IIdentityService
 
         if (expiryDateUtc > _dateTime.UtcNow)
         {
-            _logger.LogInformation("Token hasn't expired yet");
+            _logger.LogDebug("Token hasn't expired yet");
             return new IdentityResult()
             {
                 Token = token,
@@ -162,33 +162,33 @@ public class IdentityService : IIdentityService
         
         RefreshToken? storedRefreshToken = await _appDbContext.RefreshTokens.SingleOrDefaultAsync(x => x.Token == refreshToken);
 
-        _logger.LogInformation("Stored refresh token: {@stored}", storedRefreshToken);
+        _logger.LogDebug("Stored refresh token: {@stored}", storedRefreshToken);
 
         if (storedRefreshToken == null)
         {
-            _logger.LogInformation("Refresh token doesn't exist");
+            _logger.LogDebug("Refresh token doesn't exist");
             return errorResult;
         }
 
         string jti = validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
 
-        _logger.LogInformation("JTI of the old token: {jti}", jti);
+        _logger.LogDebug("JTI of the old token: {jti}", jti);
 
         if (storedRefreshToken.JwtId != jti)
         {
-            _logger.LogInformation("Refresh token doesn't match JWT. Refresh token: {refreshToken} Token JTI: {tokenJti}", storedRefreshToken.JwtId, jti);
+            _logger.LogDebug("Refresh token doesn't match JWT. Refresh token: {refreshToken} Token JTI: {tokenJti}", storedRefreshToken.JwtId, jti);
             return errorResult;
         }
 
         if (_dateTime.UtcNow > storedRefreshToken.ExpiresOn)
         {
-            _logger.LogInformation("Refresh token has expired");
+            _logger.LogDebug("Refresh token has expired");
             return errorResult;
         }
         
         if (storedRefreshToken.Used)
         {
-            _logger.LogInformation("Refresh token has been used");
+            _logger.LogDebug("Refresh token has been used");
             return errorResult;
         }
 
@@ -200,7 +200,7 @@ public class IdentityService : IIdentityService
 
         if (user == null)
         {
-            _logger.LogInformation("User doesn't exist");
+            _logger.LogDebug("User doesn't exist");
             return errorResult;
         }
 

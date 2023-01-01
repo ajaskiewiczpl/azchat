@@ -8,6 +8,7 @@ export type UserAvatarProps = {
     userName: string;
     width: number;
     height: number;
+    avatar?: string; // when undefined, avatar will be loaded from the API backend
 };
 
 const UserAvatar = (props: UserAvatarProps) => {
@@ -20,16 +21,18 @@ const UserAvatar = (props: UserAvatarProps) => {
             setAvatarData(avatarBase64);
         };
 
-        loadAvatar();
+        if (props.avatar == undefined) {
+            loadAvatar();
+        }
     }, []);
 
     return (
         <Avatar
             sx={{ width: props.width, height: props.height, bgcolor: deepOrange[500] }}
             alt={props.userName}
-            src={avatarData}
+            src={avatarData || props.avatar}
         >
-            {props.userName.substring(0, 1)}
+            {props.userName.substring(0, 1).toUpperCase()}
         </Avatar>
     );
 };

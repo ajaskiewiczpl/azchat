@@ -7,14 +7,14 @@ namespace AZChat.Services.Data.CosmosDb;
 
 public class CosmosDbMessageStorage : IMessageStorage
 {
-    private readonly ICosmosFactory _cosmosFactory;
+    private readonly ICosmosDbService _cosmosDbService;
     private readonly ILogger<CosmosDbMessageStorage> _logger;
 
     private const int PageSize = 5;
 
-    public CosmosDbMessageStorage(ICosmosFactory cosmosFactory, ILogger<CosmosDbMessageStorage> logger)
+    public CosmosDbMessageStorage(ICosmosDbService cosmosDbService, ILogger<CosmosDbMessageStorage> logger)
     {
-        _cosmosFactory = cosmosFactory;
+        _cosmosDbService = cosmosDbService;
         _logger = logger;
     }
 
@@ -22,7 +22,7 @@ public class CosmosDbMessageStorage : IMessageStorage
     {
         Stopwatch s = Stopwatch.StartNew();
 
-        Container container = _cosmosFactory.GetMessagesContainer();
+        Container container = _cosmosDbService.GetMessagesContainer();
         ItemResponse<Message> itemResponse = await container.CreateItemAsync(message, new PartitionKey(message.FromUserId));
 
         s.Stop();
@@ -33,7 +33,7 @@ public class CosmosDbMessageStorage : IMessageStorage
     {
         Stopwatch s = Stopwatch.StartNew();
 
-        Container container = _cosmosFactory.GetMessagesContainer();
+        Container container = _cosmosDbService.GetMessagesContainer();
         QueryDefinition query = new QueryDefinition(
             $"select * from c where ((c.FromUserId = '{userId}' and c.ToUserId = '{otherUserId}') or (c.FromUserId = '{otherUserId}' and c.ToUserId = '{userId}')) order by c.Timestamp desc");
         FeedIterator<Message>? iterator = container.GetItemQueryIterator<Message>(query, continuationToken: string.IsNullOrWhiteSpace(continuationToken) ? null : continuationToken, requestOptions: new QueryRequestOptions()

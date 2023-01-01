@@ -3,10 +3,10 @@ using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using AZChat.Configuration;
-using AZChat.Controllers;
 using AZChat.Data.Models;
 using AZChat.Hubs;
 using AZChat.Services.Authentication;
+using AZChat.Services.Data.Blob;
 using AZChat.Services.Data.CosmosDb;
 using AZChat.Services.Data.Sql;
 using AZChat.Services.HealthChecks;
@@ -55,8 +55,12 @@ namespace AZChat
                     await dbContext.Database.MigrateAsync();
 
                     Log.Information("Configuring CosmosDb database and container");
-                    ICosmosFactory cosmosFactory = scope.ServiceProvider.GetRequiredService<ICosmosFactory>();
-                    await cosmosFactory.EnsureCreatedAsync();
+                    ICosmosDbService cosmosDbService = scope.ServiceProvider.GetRequiredService<ICosmosDbService>();
+                    await cosmosDbService.EnsureCreatedAsync();
+
+                    Log.Information("Configuring blob storage");
+                    IBlobStorageService blobStorageService = scope.ServiceProvider.GetService<IBlobStorageService>();
+                    await blobStorageService.EnsureCreatedAsync();
                 }
 
                 // TODO cleanup RefreshTokens
@@ -79,8 +83,8 @@ namespace AZChat
 
             IConfiguration authConfig = builder.Configuration.GetSection(JwtConfiguration.SectionName);
             builder.Services.Configure<JwtConfiguration>(authConfig);
-            IConfiguration databaseConfig = builder.Configuration.GetSection(DatabaseConfiguration.SectionName);
-            builder.Services.Configure<DatabaseConfiguration>(databaseConfig);
+            IConfiguration databaseConfig = builder.Configuration.GetSection(ConnectionStrings.SectionName);
+            builder.Services.Configure<ConnectionStrings>(databaseConfig);
 
             builder.Services.AddLogging(loggingBuilder =>
             {
@@ -95,7 +99,9 @@ namespace AZChat
             builder.Services.AddTransient<IIdentityService, IdentityService>();
             builder.Services.AddTransient<IChatHubService, ChatHubService>();
             builder.Services.AddTransient<IMessageStorage, CosmosDbMessageStorage>();
-            builder.Services.AddSingleton<ICosmosFactory, CosmosFactory>();
+            builder.Services.AddTransient<IBlobStorageService, BlobStorageService>();
+            builder.Services.AddTransient<IAvatarService, AvatarService>();
+            builder.Services.AddSingleton<ICosmosDbService, CosmosDbService>();
 
             if (builder.Environment.IsDevelopment())
             {
@@ -107,7 +113,7 @@ namespace AZChat
 
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
-                string? connectionString = databaseConfig[nameof(DatabaseConfiguration.SqlConnectionString)];
+                string? connectionString = databaseConfig[nameof(ConnectionStrings.Sql)];
                 options.UseSqlServer(connectionString);
             });
 

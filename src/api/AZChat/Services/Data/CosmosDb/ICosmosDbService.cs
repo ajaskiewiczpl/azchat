@@ -2,7 +2,7 @@
 
 namespace AZChat.Services.Data.CosmosDb;
 
-public interface ICosmosFactory
+public interface ICosmosDbService
 {
     Task EnsureCreatedAsync();
     Container GetMessagesContainer();

@@ -4,16 +4,16 @@ using Microsoft.Extensions.Options;
 
 namespace AZChat.Services.Data.CosmosDb;
 
-public class CosmosFactory : ICosmosFactory
+public class CosmosDbService : ICosmosDbService
 {
     private const string DbName = "AzChat";
     private const string MessagesContainerName = "Messages";
 
     private readonly CosmosClient _client;
 
-    public CosmosFactory(IOptions<DatabaseConfiguration> dbConfig)
+    public CosmosDbService(IOptions<ConnectionStrings> dbConfig)
     {
-        _client = new CosmosClient(dbConfig.Value.CosmosDbConnectionString);
+        _client = new CosmosClient(dbConfig.Value.CosmosDb);
     }
 
     public async Task EnsureCreatedAsync()

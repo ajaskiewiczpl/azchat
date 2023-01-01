@@ -43,4 +43,15 @@ file?: Blob;
         });
     }
 
+    /**
+     * @returns any Success
+     * @throws ApiError
+     */
+    public deleteApiProfileAvatar(): CancelablePromise<any> {
+        return this.httpRequest.request({
+            method: 'DELETE',
+            url: '/api/Profile/avatar',
+        });
+    }
+
 }
