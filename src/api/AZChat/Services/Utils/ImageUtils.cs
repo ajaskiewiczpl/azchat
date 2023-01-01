@@ -12,7 +12,7 @@ public class ImageUtils
         return result;
     }
 
-    public static async Task<MemoryStream> ResizeAsPngAsync(Stream stream, int width, int height)
+    public static async Task<Image> ResizeAsync(Stream stream, int width, int height)
     {
         Image img = await Image.LoadAsync(stream);
 
@@ -21,10 +21,7 @@ public class ImageUtils
             Size = new Size(width, height),
             Mode = ResizeMode.Max
         }));
-
-        MemoryStream memoryStream = new MemoryStream();
-        await img.SaveAsPngAsync(memoryStream);
-
-        return memoryStream;
+        
+        return img;
     }
 }

@@ -2,6 +2,8 @@
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 
 namespace AZChat.Controllers;
 
@@ -43,13 +45,15 @@ public class ProfileController : BaseController
         }
 
         await using Stream inputFileStream = file.OpenReadStream();
-        await using MemoryStream avatarStream = await _avatarService.CreateAvatarAsync(inputFileStream);
-        avatarStream.Seek(0, SeekOrigin.Begin);
+        Image avatar = await _avatarService.CreateAvatarAsync(inputFileStream);
+
+        await using MemoryStream avatarStream = new MemoryStream();
+        await avatar.SaveAsPngAsync(avatarStream);
+
         await _avatarService.UploadAvatarAsync(UserId, avatarStream);
 
-        string imageBase64 = ImageUtils.ToBase64Png(avatarStream.GetBuffer());
-
-        return Ok(imageBase64);
+        string avatarBase64 = avatar.ToBase64String(PngFormat.Instance);
+        return Ok(avatarBase64);
     }
 
     [HttpDelete("avatar")]
