@@ -26,29 +26,53 @@ public class AvatarService : IAvatarService
 
     public async Task<byte[]> GetAvatarAsync(string userId)
     {
-        BlobClient blobClient = GetAvatarBlobClient(userId);
-        Response<bool> exists = await blobClient.ExistsAsync();
-        if (exists.Value)
+        try
         {
-            Response<BlobDownloadResult> response = await blobClient.DownloadContentAsync();
-            return response.Value.Content.ToArray();
+            BlobClient blobClient = GetAvatarBlobClient(userId);
+            Response<bool> exists = await blobClient.ExistsAsync();
+            if (exists.Value)
+            {
+                Response<BlobDownloadResult> response = await blobClient.DownloadContentAsync();
+                return response.Value.Content.ToArray();
+            }
+            else
+            {
+                return Array.Empty<byte>();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            return Array.Empty<byte>();
+            _logger.LogError(ex, "Failed to download avatar from blob storage");
+            throw;
         }
     }
 
     public async Task UploadAvatarAsync(string userId, Stream stream)
     {
-        BlobClient blobClient = GetAvatarBlobClient(userId);
-        Response<BlobContentInfo> response = await blobClient.UploadAsync(stream, overwrite: true);
+        try
+        {
+            BlobClient blobClient = GetAvatarBlobClient(userId);
+            Response<BlobContentInfo> response = await blobClient.UploadAsync(stream, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to upload avatar to blob storage");
+            throw;
+        }
     }
 
     public async Task DeleteAvatarAsync(string userId)
     {
-        BlobClient blobClient = GetAvatarBlobClient(userId);
-        Response<bool> response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+        try
+        {
+            BlobClient blobClient = GetAvatarBlobClient(userId);
+            Response<bool> response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete avatar from blob storage");
+            throw;
+        }
     }
 
     private BlobClient GetAvatarBlobClient(string userId)
