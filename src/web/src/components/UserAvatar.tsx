@@ -8,7 +8,7 @@ export type UserAvatarProps = {
     userName: string;
     width: number;
     height: number;
-    avatar?: string; // when undefined, avatar will be loaded from the API backend
+    avatar?: string; // when undefined, avatar will be loaded from the API backend using provided userId
 };
 
 const UserAvatar = (props: UserAvatarProps) => {

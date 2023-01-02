@@ -9,34 +9,22 @@ import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { ApiClient } from "../api/ApiClient";
-import useAuth from "../hooks/useAuth";
-import UserAvatar from "../components/UserAvatar";
 import IconButton from "@mui/material/IconButton";
 import { useSnackbar } from "notistack";
+import CurrentUserAvatar from "../components/CurrentUserAvatar";
+import { RootState } from "../redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { setAvatar } from "../redux/avatarSlice";
 
 type Props = {};
 
 const Profile = (props: Props) => {
-    const { userId, userName } = useAuth();
+    const { avatar } = useSelector((state: RootState) => state.avatar);
+    const dispatch = useDispatch();
     const { enqueueSnackbar } = useSnackbar();
-    const [avatar, setAvatar] = useState("");
     const [uploadInProgress, setUploadInProgress] = useState(false);
     const [deleteInProgress, setDeleteInProgress] = useState(false);
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-
-    useEffect(() => {
-        const loadAvatar = async () => {
-            try {
-                const api = new ApiClient();
-                const response = await api.avatar.getApiAvatar(userId);
-                setAvatar(response);
-            } catch (err) {
-                enqueueSnackbar("Could not load avatar", { variant: "error" });
-            }
-        };
-
-        loadAvatar();
-    }, []);
 
     const handleDeleteClick = () => {
         setDeleteDialogVisible(true);
@@ -54,7 +42,7 @@ const Profile = (props: Props) => {
             const response = await api.avatar.postApiAvatar({
                 file: file,
             });
-            setAvatar(response);
+            dispatch(setAvatar(response));
             enqueueSnackbar("Avatar has been successfully changed", { variant: "success" });
         } catch (err) {
             enqueueSnackbar("Could not upload avatar", { variant: "error" });
@@ -68,7 +56,7 @@ const Profile = (props: Props) => {
             setDeleteInProgress(true);
             const api = new ApiClient();
             await api.avatar.deleteApiAvatar();
-            setAvatar("");
+            dispatch(setAvatar(""));
             enqueueSnackbar("Avatar has been successfully deleted", { variant: "success" });
         } catch (err) {
             enqueueSnackbar("Could not delete avatar", { variant: "error" });
@@ -83,7 +71,7 @@ const Profile = (props: Props) => {
             <Paper elevation={4} sx={{ m: 2, p: 2 }}>
                 <Typography variant="h6">Change Your Avatar</Typography>
                 <Stack direction="row" alignItems="center" spacing={2}>
-                    <UserAvatar avatar={avatar} userId={userId} userName={userName} width={48} height={48} />
+                    <CurrentUserAvatar width={48} height={48} />
 
                     <IconButton disabled={uploadInProgress} color="primary" component="label">
                         <input hidden accept="image/*" type="file" onChange={handleAvatarUpload} />

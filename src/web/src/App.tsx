@@ -16,6 +16,8 @@ import Messages from "./Pages/Messages";
 import Home from "./Pages/Home";
 import Settings from "./Pages/Settings";
 import { SnackbarProvider } from "notistack";
+import { Provider } from "react-redux";
+import store from "./redux/store";
 
 const theme: Theme = createTheme({
     palette: {
@@ -28,26 +30,28 @@ function App() {
         <ThemeProvider theme={theme}>
             <SnackbarProvider>
                 <AuthProvider>
-                    <Routes>
-                        <Route path="/" element={<Layout />}>
-                            <Route element={<RequireNoAuth />}>
-                                <Route path="/signin" element={<SignInPage />} />
-                                <Route path="/signup" element={<SignUpPage />} />
-                            </Route>
-
-                            <Route element={<RequireAuth />}>
-                                <Route path="/" element={<MainPageLayout />}>
-                                    <Route index element={<Home />} />
-                                    <Route path="/messages/*" element={<Messages />} />
-                                    <Route path="/profile" element={<Profile />} />
-                                    <Route path="/settings" element={<Settings />} />
-                                    <Route path="/forbidden" element={<Forbidden />} />
+                    <Provider store={store}>
+                        <Routes>
+                            <Route path="/" element={<Layout />}>
+                                <Route element={<RequireNoAuth />}>
+                                    <Route path="/signin" element={<SignInPage />} />
+                                    <Route path="/signup" element={<SignUpPage />} />
                                 </Route>
-                            </Route>
 
-                            <Route path="*" element={<Navigate to="/" />} />
-                        </Route>
-                    </Routes>
+                                <Route element={<RequireAuth />}>
+                                    <Route path="/" element={<MainPageLayout />}>
+                                        <Route index element={<Home />} />
+                                        <Route path="/messages/*" element={<Messages />} />
+                                        <Route path="/profile" element={<Profile />} />
+                                        <Route path="/settings" element={<Settings />} />
+                                        <Route path="/forbidden" element={<Forbidden />} />
+                                    </Route>
+                                </Route>
+
+                                <Route path="*" element={<Navigate to="/" />} />
+                            </Route>
+                        </Routes>
+                    </Provider>
                 </AuthProvider>
             </SnackbarProvider>
         </ThemeProvider>

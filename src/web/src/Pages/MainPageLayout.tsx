@@ -1,30 +1,26 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
-import NotificationIcon from "@mui/icons-material/Notifications";
 import { useEffect, useState } from "react";
 import { ApiClient } from "../api/ApiClient";
-import { OpenAPI } from "../api/generated";
 import useLogout from "../hooks/useLogout";
 import Menu from "@mui/material/Menu";
-import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import { Outlet } from "react-router";
-import Badge from "@mui/material/Badge";
 import { Link } from "react-router-dom";
-import Profile from "./Profile";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import useAuth from "../hooks/useAuth";
-import UserAvatar from "../components/UserAvatar";
+import { useDispatch } from "react-redux";
+import { useSnackbar } from "notistack";
+import { setAvatar } from "../redux/avatarSlice";
+import CurrentUserAvatar from "../components/CurrentUserAvatar";
 
 type Props = {};
 
@@ -33,6 +29,22 @@ const HomePage = (props: Props) => {
     const logout = useLogout();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+    const dispatch = useDispatch();
+    const { enqueueSnackbar } = useSnackbar();
+
+    useEffect(() => {
+        const loadAvatar = async () => {
+            try {
+                const api = new ApiClient();
+                const response = await api.avatar.getApiAvatar(userId);
+                dispatch(setAvatar(response));
+            } catch (err) {
+                enqueueSnackbar("Could not load user avatar", { variant: "error" });
+            }
+        };
+
+        loadAvatar();
+    }, []);
 
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);
@@ -69,7 +81,7 @@ const HomePage = (props: Props) => {
                                 </Badge>
                             </IconButton> */}
                         <IconButton color="inherit" onClick={handleOpenUserMenu}>
-                            <UserAvatar userId={userId} userName={userName} width={32} height={32} />
+                            <CurrentUserAvatar width={32} height={32} />
                         </IconButton>
                         <Menu
                             sx={{ mt: "45px" }}
