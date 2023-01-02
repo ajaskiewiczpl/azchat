@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
@@ -17,7 +16,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Internal;
@@ -59,7 +57,7 @@ namespace AZChat
                     await cosmosDbService.EnsureCreatedAsync();
 
                     Log.Information("Configuring blob storage");
-                    IBlobStorageService blobStorageService = scope.ServiceProvider.GetService<IBlobStorageService>();
+                    IBlobStorageService blobStorageService = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
                     await blobStorageService.EnsureCreatedAsync();
                 }
 
@@ -187,7 +185,7 @@ namespace AZChat
                 })
                 .AddTransientHttpErrorPolicy(policyBuilder =>
                     policyBuilder.WaitAndRetryAsync(Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(2), 3)));
-
+            
             builder.Services.AddSignalR();
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -266,7 +264,7 @@ namespace AZChat
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseSpaStaticFiles();

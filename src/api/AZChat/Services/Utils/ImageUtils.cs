@@ -12,9 +12,14 @@ public class ImageUtils
         return result;
     }
 
-    public static async Task<Image> ResizeAsync(Stream stream, int width, int height)
+    public static async Task<Image> ResizeAsync(Stream stream, int width, int height, CancellationToken token)
     {
-        Image img = await Image.LoadAsync(stream);
+        Image img = await Image.LoadAsync(stream, token);
+
+        if (token.IsCancellationRequested)
+        {
+            return img;
+        }
 
         img.Mutate(x => x.Resize(new ResizeOptions()
         {

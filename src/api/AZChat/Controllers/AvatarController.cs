@@ -13,16 +13,17 @@ namespace AZChat.Controllers;
 public class AvatarController : BaseController
 {
     private readonly IAvatarService _avatarService;
+    private readonly ILogger<AvatarController> _logger;
 
-    public AvatarController(IAvatarService avatarService)
+    public AvatarController(IAvatarService avatarService, ILogger<AvatarController> logger)
     {
         _avatarService = avatarService;
+        _logger = logger;
     }
 
     [HttpGet("{userId}")]
     public async Task<ActionResult<string>> GetAvatar(string userId)
     {
-        // TODO caching
         byte[] avatar = await _avatarService.GetAvatarAsync(userId);
 
         if (avatar.Any())
@@ -37,7 +38,7 @@ public class AvatarController : BaseController
     }
 
     [HttpPost()]
-    public async Task<ActionResult<string>> SetAvatar(IFormFile? file)
+    public async Task<ActionResult<string>> SetAvatar(IFormFile? file, CancellationToken token)
     {
         if (file == null)
         {
@@ -45,14 +46,29 @@ public class AvatarController : BaseController
         }
 
         await using Stream inputFileStream = file.OpenReadStream();
-        Image avatar = await _avatarService.CreateAvatarAsync(inputFileStream);
+        Image avatar = await _avatarService.CreateAvatarAsync(inputFileStream, token);
+
+        if (token.IsCancellationRequested)
+        {
+            return NoContent();
+        }
 
         await using MemoryStream avatarStream = new MemoryStream();
-        await avatar.SaveAsPngAsync(avatarStream);
+        await avatar.SaveAsPngAsync(avatarStream, token);
+
+        if (token.IsCancellationRequested)
+        {
+            return NoContent();
+        }
 
         avatarStream.Seek(0, SeekOrigin.Begin);
-        await _avatarService.UploadAvatarAsync(UserId, avatarStream);
+        await _avatarService.UploadAvatarAsync(UserId, avatarStream, token);
 
+        if (token.IsCancellationRequested)
+        {
+            return NoContent();
+        }
+        
         string avatarBase64 = avatar.ToBase64String(PngFormat.Instance);
         return Ok(avatarBase64);
     }
@@ -62,6 +78,7 @@ public class AvatarController : BaseController
     {
         string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;
         await _avatarService.DeleteAvatarAsync(currentUserId);
+        
         return Ok();
     }
 }

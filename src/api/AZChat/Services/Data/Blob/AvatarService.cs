@@ -17,11 +17,11 @@ public class AvatarService : IAvatarService
         _logger = logger;
     }
 
-    public async Task<Image> CreateAvatarAsync(Stream stream)
+    public async Task<Image> CreateAvatarAsync(Stream stream, CancellationToken token)
     {
         try
         {
-            Image memoryStream = await ImageUtils.ResizeAsync(stream, 64, 64);
+            Image memoryStream = await ImageUtils.ResizeAsync(stream, 64, 64, token);
             return memoryStream;
         }
         catch (Exception ex)
@@ -54,12 +54,12 @@ public class AvatarService : IAvatarService
         }
     }
 
-    public async Task UploadAvatarAsync(string userId, Stream stream)
+    public async Task UploadAvatarAsync(string userId, Stream stream, CancellationToken token)
     {
         try
         {
             BlobClient blobClient = GetAvatarBlobClient(userId);
-            Response<BlobContentInfo> response = await blobClient.UploadAsync(stream, overwrite: true);
+            Response<BlobContentInfo> response = await blobClient.UploadAsync(stream, overwrite: true, token);
         }
         catch (Exception ex)
         {
