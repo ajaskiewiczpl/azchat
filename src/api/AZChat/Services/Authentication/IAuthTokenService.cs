@@ -1,4 +1,5 @@
-﻿using AZChat.Data.Models;
+﻿using System.Security.Claims;
+using AZChat.Data.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AZChat.Services.Authentication;

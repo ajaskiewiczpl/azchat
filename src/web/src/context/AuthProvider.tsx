@@ -22,11 +22,13 @@ function removeTokenFromLocalStorage() {
 type Jwt = {
     userId: string;
     name: string;
+    role: string;
 };
 
 export type Auth = {
     userId: string;
     userName: string;
+    role: string;
     token: string;
     setToken: (t: string) => void;
     persistToken: (t: string) => void;
@@ -36,6 +38,7 @@ export type Auth = {
 const AuthContext = createContext<Auth>({
     userId: "",
     userName: "",
+    role: "",
     token: "",
     setToken: (t: string) => {},
     persistToken: (t: string) => {},
@@ -70,15 +73,27 @@ export const AuthProvider = (props: Props) => {
         }
     };
 
+    const getUserRoleFromToken = () => {
+        const jwt = getTokenOrEmptyString();
+        if (jwt.length > 0) {
+            const { role } = jwtDecode<Jwt>(jwt);
+            return role;
+        } else {
+            return "";
+        }
+    };
+
     const [userId, setUserId] = useState<string>(getUserIdFromToken());
     const [userName, setUserName] = useState<string>(getUserNameFromToken());
+    const [role, setRole] = useState<string>(getUserRoleFromToken());
     const [token, setToken] = useState<string>(getTokenOrEmptyString());
 
     useEffect(() => {
         if (token) {
-            const { userId, name } = jwtDecode<Jwt>(token);
+            const { userId, name, role } = jwtDecode<Jwt>(token);
             setUserId(userId);
             setUserName(name);
+            setRole(role);
         }
     }, [token]);
 
@@ -144,7 +159,7 @@ export const AuthProvider = (props: Props) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ userId, userName, token, setToken, persistToken, signOut }}>
+        <AuthContext.Provider value={{ userId, userName, role, token, setToken, persistToken, signOut }}>
             {props.children}
         </AuthContext.Provider>
     );

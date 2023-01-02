@@ -17,22 +17,68 @@ public class IdentityService : IIdentityService
     private readonly IOptions<JwtConfiguration> _jwtConfig;
     private readonly AppDbContext _appDbContext;
     private readonly UserManager<User> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IAuthTokenService _authTokenService;
     private readonly IMapper _mapper;
     private readonly TokenValidationParameters _tokenValidationParameters;
     private readonly IDateTime _dateTime;
     private readonly ILogger<IdentityService> _logger;
 
-    public IdentityService(IOptions<JwtConfiguration> jwtConfig, AppDbContext appDbContext, UserManager<User> userManager, IAuthTokenService authTokenService, IMapper mapper, TokenValidationParameters tokenValidationParameters, IDateTime dateTime, ILogger<IdentityService> logger)
+    public IdentityService(IOptions<JwtConfiguration> jwtConfig, AppDbContext appDbContext, UserManager<User> userManager, RoleManager<IdentityRole> roleManager,
+        IAuthTokenService authTokenService, IMapper mapper, TokenValidationParameters tokenValidationParameters, IDateTime dateTime, ILogger<IdentityService> logger)
     {
         _jwtConfig = jwtConfig;
         _appDbContext = appDbContext;
         _userManager = userManager;
+        _roleManager = roleManager;
         _authTokenService = authTokenService;
         _mapper = mapper;
         _tokenValidationParameters = tokenValidationParameters;
         _dateTime = dateTime;
         _logger = logger;
+    }
+
+    public async Task CreateAdminAccountIfNotExistsAsync(string userName, string password)
+    {
+        User? adminAccount = await _userManager.FindByNameAsync(userName);
+
+        if (adminAccount == null)
+        {
+            adminAccount = new()
+            {
+                UserName = userName
+            };
+            
+            Microsoft.AspNetCore.Identity.IdentityResult identityResult = await _userManager.CreateAsync(adminAccount, password);
+
+            if (!identityResult.Succeeded)
+            {
+                throw new Exception(
+                    $"Failed to create admin account. Errors:{Environment.NewLine}{identityResult.Errors.Select(x => $"{x.Code} - {x.Description}{Environment.NewLine}")}");
+            }
+
+            adminAccount = await _userManager.FindByNameAsync(userName);
+        }
+        
+        IdentityRole? adminRole = await _roleManager.FindByNameAsync(Roles.Admin);
+
+        if (adminRole == null)
+        {
+            Microsoft.AspNetCore.Identity.IdentityResult roleCreateResult = await _roleManager.CreateAsync(new IdentityRole(Roles.Admin));
+
+            if (!roleCreateResult.Succeeded)
+            {
+                throw new Exception(
+                    $"Failed to create admin role. Errors:{Environment.NewLine}{roleCreateResult.Errors.Select(x => $"{x.Code} - {x.Description}{Environment.NewLine}")}");
+            }
+        }
+
+        bool isInAdminRole = await _userManager.IsInRoleAsync(adminAccount!, Roles.Admin);
+
+        if (!isInAdminRole)
+        {
+            await _userManager.AddToRoleAsync(adminAccount!, Roles.Admin);
+        }
     }
 
     public async Task<IdentityResult> RegisterAsync(string userName, string password)

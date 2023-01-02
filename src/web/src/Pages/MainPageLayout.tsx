@@ -3,8 +3,10 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
+import ChatIcon from "@mui/icons-material/Chat";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import SettingsIcon from "@mui/icons-material/Settings";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useEffect, useState } from "react";
 import { ApiClient } from "../api/ApiClient";
@@ -21,11 +23,13 @@ import { useDispatch } from "react-redux";
 import { useSnackbar } from "notistack";
 import { setAvatar } from "../redux/avatarSlice";
 import CurrentUserAvatar from "../components/CurrentUserAvatar";
+import { Roles } from "../misc/roles";
+import { Divider } from "@mui/material";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
-    const { userId, userName } = useAuth();
+    const { userId, userName, role } = useAuth();
     const logout = useLogout();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -66,12 +70,37 @@ const HomePage = (props: Props) => {
         }
     };
 
+    const renderAdminMenu = () => {
+        if (role == Roles.ADMIN) {
+            return (
+                <div>
+                    <MenuItem
+                        component={Link}
+                        to="/admin"
+                        key="admin"
+                        onClick={closeUserMenu}
+                        disabled={isLoggingOut}
+                        sx={{ mt: 1 }}
+                    >
+                        <ListItemIcon>
+                            <AdminPanelSettingsIcon />
+                        </ListItemIcon>
+                        <ListItemText>Administration</ListItemText>
+                    </MenuItem>
+                    <Divider />
+                </div>
+            );
+        } else {
+            return null;
+        }
+    };
+
     return (
         <Box>
             <AppBar position="static">
                 <Toolbar>
-                    <Button component={Link} to={"/"} color="inherit" size="large">
-                        AZ Chat
+                    <Button component={Link} to={"/"} color="inherit" size="large" startIcon={<ChatIcon />}>
+                        az-chat
                     </Button>
                     <Box sx={{ flexGrow: 1 }} />
                     <Box>
@@ -100,6 +129,8 @@ const HomePage = (props: Props) => {
                             onClose={closeUserMenu}
                         >
                             <ListSubheader>{userName}</ListSubheader>
+                            <Divider />
+                            {renderAdminMenu()}
                             <MenuItem
                                 component={Link}
                                 to="/profile"

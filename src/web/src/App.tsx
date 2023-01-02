@@ -18,6 +18,8 @@ import Settings from "./Pages/Settings/Settings";
 import { SnackbarProvider } from "notistack";
 import { Provider } from "react-redux";
 import store from "./redux/store";
+import Admin from "./Pages/Admin/Admin";
+import { Roles } from "./misc/roles";
 
 const theme: Theme = createTheme({
     palette: {
@@ -44,10 +46,16 @@ function App() {
                                         <Route path="/messages/*" element={<Messages />} />
                                         <Route path="/profile" element={<Profile />} />
                                         <Route path="/settings" element={<Settings />} />
-                                        <Route path="/forbidden" element={<Forbidden />} />
                                     </Route>
                                 </Route>
 
+                                <Route element={<RequireAuth allowedRoles={[Roles.ADMIN]} />}>
+                                    <Route path="/admin" element={<MainPageLayout />}>
+                                        <Route index element={<Admin />} />
+                                    </Route>
+                                </Route>
+
+                                <Route path="/forbidden" element={<Forbidden />} />
                                 <Route path="*" element={<Navigate to="/" />} />
                             </Route>
                         </Routes>

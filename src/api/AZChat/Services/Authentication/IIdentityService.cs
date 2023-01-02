@@ -11,6 +11,7 @@ public interface IIdentityService
     Task<IdentityResult> RefreshTokenAsync(string token, string refreshToken);
     Task<IdentityResult> ChangePasswordAsync(string userName, string currentPassword, string newPassword);
     Task SignOutAsync(string refreshToken);
+    Task CreateAdminAccountIfNotExistsAsync(string userName, string password);
 }
 
 public class IdentityResult

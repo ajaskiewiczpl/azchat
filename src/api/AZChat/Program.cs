@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Internal;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -59,10 +60,15 @@ namespace AZChat
                     Log.Information("Configuring blob storage");
                     IBlobStorageService blobStorageService = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
                     await blobStorageService.EnsureCreatedAsync();
+
+                    Log.Information("Creating admin role and account if not exists");
+                    IOptions<AdminAccountConfiguration> adminAccountConfig = scope.ServiceProvider.GetRequiredService<IOptions<AdminAccountConfiguration>>();
+                    IIdentityService identityService = scope.ServiceProvider.GetRequiredService<IIdentityService>();
+                    await identityService.CreateAdminAccountIfNotExistsAsync(adminAccountConfig.Value.UserName, adminAccountConfig.Value.Password);
+
+                    // TODO cleanup RefreshTokens
                 }
-
-                // TODO cleanup RefreshTokens
-
+                
                 Log.Information("App configured, starting");
 
                 await app.RunAsync();
@@ -81,8 +87,12 @@ namespace AZChat
 
             IConfiguration authConfig = builder.Configuration.GetSection(JwtConfiguration.SectionName);
             builder.Services.Configure<JwtConfiguration>(authConfig);
+
             IConfiguration databaseConfig = builder.Configuration.GetSection(ConnectionStrings.SectionName);
             builder.Services.Configure<ConnectionStrings>(databaseConfig);
+
+            IConfiguration adminAccountConfig = builder.Configuration.GetSection(AdminAccountConfiguration.SectionName);
+            builder.Services.Configure<AdminAccountConfiguration>(adminAccountConfig);
 
             builder.Services.AddLogging(loggingBuilder =>
             {
@@ -114,15 +124,15 @@ namespace AZChat
                 string? connectionString = databaseConfig[nameof(ConnectionStrings.Sql)];
                 options.UseSqlServer(connectionString);
             });
-
+            
             builder.Services
-                .AddIdentity<User, IdentityRole>(identityOptions =>
+                .AddIdentity<User, IdentityRole>(options =>
                 {
-                    identityOptions.Password.RequireDigit = false;
-                    identityOptions.Password.RequireLowercase = false;
-                    identityOptions.Password.RequireNonAlphanumeric = false;
-                    identityOptions.Password.RequireUppercase = false;
-                    identityOptions.Password.RequiredLength = 3;
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequiredLength = 3;
                 })
                 .AddEntityFrameworkStores<AppDbContext>();
             
