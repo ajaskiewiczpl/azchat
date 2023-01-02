@@ -2,6 +2,7 @@
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using SixLabors.ImageSharp;
 
 namespace AZChat.Services.Data.Blob;
 
@@ -16,11 +17,11 @@ public class AvatarService : IAvatarService
         _logger = logger;
     }
 
-    public async Task<MemoryStream> CreateAvatarAsync(Stream stream)
+    public async Task<Image> CreateAvatarAsync(Stream stream)
     {
         try
         {
-            MemoryStream memoryStream = await ImageUtils.ResizeAsPngAsync(stream, 64, 64);
+            Image memoryStream = await ImageUtils.ResizeAsync(stream, 64, 64);
             return memoryStream;
         }
         catch (Exception ex)
