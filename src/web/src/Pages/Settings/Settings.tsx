@@ -7,12 +7,12 @@ import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { ApiClient } from "../api/ApiClient";
+import { ApiClient } from "../../api/ApiClient";
 import Box from "@mui/material/Box";
 import KeyIcon from "@mui/icons-material/Key";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
-import { ApiError } from "../api/generated";
+import { ApiError } from "../../api/generated";
 import { Card } from "@mui/material";
 
 type Props = {};

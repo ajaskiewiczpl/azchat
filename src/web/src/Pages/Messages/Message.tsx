@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MessageDto, MessageStatus } from "../api/generated";
+import { MessageDto, MessageStatus } from "../../api/generated";
 import ErrorIcon from "@mui/icons-material/Error";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -8,8 +8,7 @@ import Tooltip from "@mui/material/Tooltip";
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { ApiClient } from "../api/ApiClient";
-import moment from "moment";
+import { ApiClient } from "../../api/ApiClient";
 
 export type MessageProps = {
     userId: string;

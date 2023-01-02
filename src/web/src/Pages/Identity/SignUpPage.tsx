@@ -8,8 +8,8 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import Typography from "@mui/material/Typography";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { ApiClient } from "../api/ApiClient";
-import { ApiError, RegistrationResponseDto } from "../api/generated";
+import { ApiClient } from "../../api/ApiClient";
+import { ApiError, RegistrationResponseDto } from "../../api/generated";
 
 export default function SignUpPage() {
     const [errors, setErrors] = useState<string[]>([]);

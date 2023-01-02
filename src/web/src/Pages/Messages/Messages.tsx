@@ -10,10 +10,10 @@ import ListItemText from "@mui/material/ListItemText";
 import { Alert, Badge, Container, Grid, makeStyles, TextField, Typography } from "@mui/material";
 import Conversation from "./Conversation";
 import { useEffect, useRef, useState } from "react";
-import { ApiError, FriendDto, MessageDto } from "../api/generated";
-import { ApiClient } from "../api/ApiClient";
-import { ChatHubService } from "../api/ChatHubService";
-import UserAvatar from "../components/UserAvatar";
+import { ApiError, FriendDto, MessageDto } from "../../api/generated";
+import { ApiClient } from "../../api/ApiClient";
+import { ChatHubService } from "../../api/ChatHubService";
+import UserAvatar from "../../components/UserAvatar";
 
 type Props = {};
 

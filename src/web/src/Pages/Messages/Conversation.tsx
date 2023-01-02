@@ -1,28 +1,14 @@
-import {
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    IconButton,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
-    Paper,
-    TextField,
-    Tooltip,
-    Typography,
-} from "@mui/material";
+import { Box, List, ListItem, TextField } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { ApiClient } from "../api/ApiClient";
-import { ChatHubService } from "../api/ChatHubService";
-import useAuth from "../hooks/useAuth";
-import { MessageDto, MessageStatus } from "../api/generated";
+import { ChatHubService } from "../../api/ChatHubService";
+import useAuth from "../../hooks/useAuth";
+import { MessageDto, MessageStatus } from "../../api/generated";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Message from "./Message";
 import { useSnackbar } from "notistack";
+import { ApiClient } from "../../api/ApiClient";
 
 type InnerConversationProps = {
     otherUserId: string;

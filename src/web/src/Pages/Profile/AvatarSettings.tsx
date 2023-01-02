@@ -1,27 +1,26 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
-import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { ApiClient } from "../api/ApiClient";
+import { ApiClient } from "../../api/ApiClient";
 import IconButton from "@mui/material/IconButton";
 import { useSnackbar } from "notistack";
-import CurrentUserAvatar from "../components/CurrentUserAvatar";
-import { RootState } from "../redux/store";
+import CurrentUserAvatar from "../../components/CurrentUserAvatar";
+import { RootState } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { setAvatar } from "../redux/avatarSlice";
+import { setAvatar } from "../../redux/avatarSlice";
 
 type Props = {};
 
-const Profile = (props: Props) => {
+const AvatarSettings = (props: Props) => {
     const { avatar } = useSelector((state: RootState) => state.avatar);
     const dispatch = useDispatch();
     const { enqueueSnackbar } = useSnackbar();
+
     const [uploadInProgress, setUploadInProgress] = useState(false);
     const [deleteInProgress, setDeleteInProgress] = useState(false);
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
@@ -67,25 +66,19 @@ const Profile = (props: Props) => {
     };
 
     return (
-        <Container maxWidth="sm">
-            <Paper elevation={4} sx={{ m: 2, p: 2 }}>
-                <Typography variant="h6">Change Your Avatar</Typography>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                    <CurrentUserAvatar width={48} height={48} />
+        <section>
+            <Typography variant="h6">Change Your Avatar</Typography>
+            <Stack direction="row" alignItems="center" spacing={2}>
+                <CurrentUserAvatar width={48} height={48} />
 
-                    <IconButton disabled={uploadInProgress} color="primary" component="label">
-                        <input hidden accept="image/*" type="file" onChange={handleAvatarUpload} />
-                        {uploadInProgress ? <CircularProgress size={24} /> : <CloudUploadIcon />}
-                    </IconButton>
-                    <IconButton
-                        disabled={uploadInProgress || avatar.length == 0}
-                        color="error"
-                        onClick={handleDeleteClick}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Stack>
-            </Paper>
+                <IconButton disabled={uploadInProgress} color="primary" component="label">
+                    <input hidden accept="image/*" type="file" onChange={handleAvatarUpload} />
+                    {uploadInProgress ? <CircularProgress size={24} /> : <CloudUploadIcon />}
+                </IconButton>
+                <IconButton disabled={uploadInProgress || avatar.length == 0} color="error" onClick={handleDeleteClick}>
+                    <DeleteIcon />
+                </IconButton>
+            </Stack>
             <Dialog open={deleteDialogVisible}>
                 <DialogTitle>Delete Avatar</DialogTitle>
                 <DialogContent>
@@ -106,8 +99,8 @@ const Profile = (props: Props) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Container>
+        </section>
     );
 };
 
-export default Profile;
+export default AvatarSettings;

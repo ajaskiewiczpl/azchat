@@ -5,10 +5,10 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import { Box, Container } from "@mui/system";
-import { ApiClient } from "../api/ApiClient";
-import { ApiError } from "../api/generated/core/ApiError";
-import { AuthenticationResponseDto, OpenAPI } from "../api/generated";
-import useAuth from "../hooks/useAuth";
+import { ApiClient } from "../../api/ApiClient";
+import { ApiError } from "../../api/generated/core/ApiError";
+import { AuthenticationResponseDto, OpenAPI } from "../../api/generated";
+import useAuth from "../../hooks/useAuth";
 
 const SignInPage = () => {
     const { persistToken } = useAuth();
