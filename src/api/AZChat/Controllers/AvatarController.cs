@@ -10,16 +10,16 @@ namespace AZChat.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class ProfileController : BaseController
+public class AvatarController : BaseController
 {
     private readonly IAvatarService _avatarService;
 
-    public ProfileController(IAvatarService avatarService)
+    public AvatarController(IAvatarService avatarService)
     {
         _avatarService = avatarService;
     }
 
-    [HttpGet("avatar/{userId}")]
+    [HttpGet("{userId}")]
     public async Task<ActionResult<string>> GetAvatar(string userId)
     {
         // TODO caching
@@ -32,11 +32,11 @@ public class ProfileController : BaseController
         }
         else
         {
-            return NotFound();
+            return string.Empty;
         }
     }
 
-    [HttpPost("avatar")]
+    [HttpPost()]
     public async Task<ActionResult<string>> SetAvatar(IFormFile? file)
     {
         if (file == null)
@@ -50,13 +50,14 @@ public class ProfileController : BaseController
         await using MemoryStream avatarStream = new MemoryStream();
         await avatar.SaveAsPngAsync(avatarStream);
 
+        avatarStream.Seek(0, SeekOrigin.Begin);
         await _avatarService.UploadAvatarAsync(UserId, avatarStream);
 
         string avatarBase64 = avatar.ToBase64String(PngFormat.Instance);
         return Ok(avatarBase64);
     }
 
-    [HttpDelete("avatar")]
+    [HttpDelete()]
     public async Task<ActionResult> DeleteAvatar()
     {
         string currentUserId = User.Claims.Single(x => x.Type == CustomClaims.UserId).Value;

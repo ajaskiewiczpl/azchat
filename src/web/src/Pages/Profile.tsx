@@ -25,7 +25,7 @@ const Profile = (props: Props) => {
     useEffect(() => {
         const loadAvatar = async () => {
             const api = new ApiClient();
-            const response = await api.profile.getApiProfileAvatar(userId);
+            const response = await api.avatar.getApiAvatar(userId);
             setAvatar(response);
         };
 
@@ -45,7 +45,7 @@ const Profile = (props: Props) => {
             setUploadInProgress(true);
             const file = e.target.files?.[0];
             const api = new ApiClient();
-            const response = await api.profile.postApiProfileAvatar({
+            const response = await api.avatar.postApiAvatar({
                 file: file,
             });
             setAvatar(response);
@@ -60,7 +60,7 @@ const Profile = (props: Props) => {
         try {
             setDeleteInProgress(true);
             const api = new ApiClient();
-            await api.profile.deleteApiProfileAvatar();
+            await api.avatar.deleteApiAvatar();
             setAvatar("");
         } catch (err) {
             console.error(err); // TODO
@@ -73,7 +73,7 @@ const Profile = (props: Props) => {
     return (
         <Container maxWidth="sm">
             <Paper elevation={4} sx={{ m: 2, p: 2 }}>
-                <Typography variant="h6">{userName}</Typography>
+                <Typography variant="h6">Change Your Avatar</Typography>
                 <Stack direction="row" alignItems="center" spacing={2}>
                     <UserAvatar avatar={avatar} userId={userId} userName={userName} width={48} height={48} />
 

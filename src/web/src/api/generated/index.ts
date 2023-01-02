@@ -22,6 +22,6 @@ export type { RegistrationResponseDto } from './models/RegistrationResponseDto';
 export type { SendMessageRequestDto } from './models/SendMessageRequestDto';
 export type { UserBaseRequestDto } from './models/UserBaseRequestDto';
 
+export { AvatarService } from './services/AvatarService';
 export { ChatService } from './services/ChatService';
 export { IdentityService } from './services/IdentityService';
-export { ProfileService } from './services/ProfileService';

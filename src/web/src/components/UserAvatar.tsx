@@ -17,7 +17,7 @@ const UserAvatar = (props: UserAvatarProps) => {
     useEffect(() => {
         const loadAvatar = async () => {
             const api = new ApiClient();
-            const avatarBase64 = await api.profile.getApiProfileAvatar(props.userId);
+            const avatarBase64 = await api.avatar.getApiAvatar(props.userId);
             setAvatarData(avatarBase64);
         };
 

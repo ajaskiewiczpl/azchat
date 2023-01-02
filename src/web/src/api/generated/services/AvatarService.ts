@@ -4,7 +4,7 @@
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 
-export class ProfileService {
+export class AvatarService {
 
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
@@ -13,12 +13,12 @@ export class ProfileService {
      * @returns string Success
      * @throws ApiError
      */
-    public getApiProfileAvatar(
+    public getApiAvatar(
 userId: string,
 ): CancelablePromise<string> {
         return this.httpRequest.request({
             method: 'GET',
-            url: '/api/Profile/avatar/{userId}',
+            url: '/api/Avatar/{userId}',
             path: {
                 'userId': userId,
             },
@@ -30,14 +30,14 @@ userId: string,
      * @returns string Success
      * @throws ApiError
      */
-    public postApiProfileAvatar(
+    public postApiAvatar(
 formData?: {
 file?: Blob;
 },
 ): CancelablePromise<string> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/api/Profile/avatar',
+            url: '/api/Avatar',
             formData: formData,
             mediaType: 'multipart/form-data',
         });
@@ -47,10 +47,10 @@ file?: Blob;
      * @returns any Success
      * @throws ApiError
      */
-    public deleteApiProfileAvatar(): CancelablePromise<any> {
+    public deleteApiAvatar(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'DELETE',
-            url: '/api/Profile/avatar',
+            url: '/api/Avatar',
         });
     }
 
