@@ -12,11 +12,13 @@ import { ApiClient } from "../api/ApiClient";
 import useAuth from "../hooks/useAuth";
 import UserAvatar from "../components/UserAvatar";
 import IconButton from "@mui/material/IconButton";
+import { useSnackbar } from "notistack";
 
 type Props = {};
 
 const Profile = (props: Props) => {
     const { userId, userName } = useAuth();
+    const { enqueueSnackbar } = useSnackbar();
     const [avatar, setAvatar] = useState("");
     const [uploadInProgress, setUploadInProgress] = useState(false);
     const [deleteInProgress, setDeleteInProgress] = useState(false);
@@ -24,9 +26,13 @@ const Profile = (props: Props) => {
 
     useEffect(() => {
         const loadAvatar = async () => {
-            const api = new ApiClient();
-            const response = await api.avatar.getApiAvatar(userId);
-            setAvatar(response);
+            try {
+                const api = new ApiClient();
+                const response = await api.avatar.getApiAvatar(userId);
+                setAvatar(response);
+            } catch (err) {
+                enqueueSnackbar("Could not load avatar", { variant: "error" });
+            }
         };
 
         loadAvatar();
@@ -49,8 +55,9 @@ const Profile = (props: Props) => {
                 file: file,
             });
             setAvatar(response);
+            enqueueSnackbar("Avatar has been successfully changed", { variant: "success" });
         } catch (err) {
-            console.error(err); // TODO
+            enqueueSnackbar("Could not upload avatar", { variant: "error" });
         } finally {
             setUploadInProgress(false);
         }
@@ -62,8 +69,9 @@ const Profile = (props: Props) => {
             const api = new ApiClient();
             await api.avatar.deleteApiAvatar();
             setAvatar("");
+            enqueueSnackbar("Avatar has been successfully deleted", { variant: "success" });
         } catch (err) {
-            console.error(err); // TODO
+            enqueueSnackbar("Could not delete avatar", { variant: "error" });
         } finally {
             setDeleteInProgress(false);
             handleDeleteDialogClose();

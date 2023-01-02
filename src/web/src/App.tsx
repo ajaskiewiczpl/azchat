@@ -15,6 +15,7 @@ import Profile from "./Pages/Profile";
 import Messages from "./Pages/Messages";
 import Home from "./Pages/Home";
 import Settings from "./Pages/Settings";
+import { SnackbarProvider } from "notistack";
 
 const theme: Theme = createTheme({
     palette: {
@@ -25,28 +26,30 @@ const theme: Theme = createTheme({
 function App() {
     return (
         <ThemeProvider theme={theme}>
-            <AuthProvider>
-                <Routes>
-                    <Route path="/" element={<Layout />}>
-                        <Route element={<RequireNoAuth />}>
-                            <Route path="/signin" element={<SignInPage />} />
-                            <Route path="/signup" element={<SignUpPage />} />
-                        </Route>
-
-                        <Route element={<RequireAuth />}>
-                            <Route path="/" element={<MainPageLayout />}>
-                                <Route index element={<Home />} />
-                                <Route path="/messages/*" element={<Messages />} />
-                                <Route path="/profile" element={<Profile />} />
-                                <Route path="/settings" element={<Settings />} />
-                                <Route path="/forbidden" element={<Forbidden />} />
+            <SnackbarProvider>
+                <AuthProvider>
+                    <Routes>
+                        <Route path="/" element={<Layout />}>
+                            <Route element={<RequireNoAuth />}>
+                                <Route path="/signin" element={<SignInPage />} />
+                                <Route path="/signup" element={<SignUpPage />} />
                             </Route>
-                        </Route>
 
-                        <Route path="*" element={<Navigate to="/" />} />
-                    </Route>
-                </Routes>
-            </AuthProvider>
+                            <Route element={<RequireAuth />}>
+                                <Route path="/" element={<MainPageLayout />}>
+                                    <Route index element={<Home />} />
+                                    <Route path="/messages/*" element={<Messages />} />
+                                    <Route path="/profile" element={<Profile />} />
+                                    <Route path="/settings" element={<Settings />} />
+                                    <Route path="/forbidden" element={<Forbidden />} />
+                                </Route>
+                            </Route>
+
+                            <Route path="*" element={<Navigate to="/" />} />
+                        </Route>
+                    </Routes>
+                </AuthProvider>
+            </SnackbarProvider>
         </ThemeProvider>
     );
 }

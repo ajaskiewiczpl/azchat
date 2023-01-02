@@ -77,7 +77,7 @@ const Messages = (props: Props) => {
             await chatHubService.connect();
             setConnection(chatHubService);
         } catch (err) {
-            setErrorMessage("Could not connect");
+            setErrorMessage("Could not connect to server");
         }
     };
 

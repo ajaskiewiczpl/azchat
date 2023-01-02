@@ -22,6 +22,7 @@ import useAuth from "../hooks/useAuth";
 import { MessageDto, MessageStatus } from "../api/generated";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Message from "./Message";
+import { useSnackbar } from "notistack";
 
 type InnerConversationProps = {
     otherUserId: string;
@@ -29,6 +30,7 @@ type InnerConversationProps = {
 
 const InnerConversation = (props: InnerConversationProps) => {
     const { userId } = useAuth();
+    const { enqueueSnackbar } = useSnackbar();
     const [connection, setConnection] = useState<ChatHubService | null>(null);
     const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const [continuationToken, setContinuationToken] = useState<string | null>(null);
@@ -50,7 +52,7 @@ const InnerConversation = (props: InnerConversationProps) => {
                 await chatHubService.connect();
                 setConnection(chatHubService);
             } catch (err) {
-                alert("Error connecting to hub: " + err); // TODO show error
+                enqueueSnackbar("Could not connect to server", { variant: "error" });
             }
         };
 
@@ -90,7 +92,7 @@ const InnerConversation = (props: InnerConversationProps) => {
             setHasMoreMessages(response.hasMoreMessages);
             setMessages((currentMessages) => [...response.messages, ...currentMessages]);
         } catch (err) {
-            alert("Could not fetch messages: " + err); // TODO
+            enqueueSnackbar("Could not fetch messages", { variant: "error" });
         } finally {
             setIsLoadingMessages(false);
         }
