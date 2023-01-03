@@ -25,7 +25,6 @@ export class AdminHubService {
     async connect(): Promise<string> {
         try {
             await this.hub.start();
-            console.log("Connected to HUB. Connection ID: ", this.hub.connectionId);
             return this.hub.connectionId || "";
         } catch (err) {
             console.error("Could not connect to chat hub", err);
@@ -37,9 +36,7 @@ export class AdminHubService {
         this.hub
             .stop()
             .catch((err) => console.error("Error while disconnecting", err))
-            .then(() => {
-                console.log("Disconnected");
-            });
+            .then(() => {});
     }
 
     onUsersDeleteProgress(callback: OnUsersDeleteProgressCallback) {
