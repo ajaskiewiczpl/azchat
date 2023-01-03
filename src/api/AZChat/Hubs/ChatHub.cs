@@ -6,5 +6,4 @@ namespace AZChat.Hubs;
 [Authorize]
 public class ChatHub : Hub
 {
-
 }

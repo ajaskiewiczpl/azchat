@@ -171,7 +171,7 @@ namespace AZChat
                         {
                             StringValues accessToken = context.Request.Query["access_token"];
                             PathString path = context.HttpContext.Request.Path;
-                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hub/chat")))
+                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hub")))
                             {
                                 context.Token = accessToken;
                             }
@@ -283,6 +283,7 @@ namespace AZChat
             app.MapHealthChecks(ApiHealthCheck.Name);
             app.MapControllers();
             app.MapHub<ChatHub>("/api/hub/chat");
+            app.MapHub<AdminHub>("/api/hub/admin");
         }
 
         private static void ConfigureLogging(IConfiguration configuration)

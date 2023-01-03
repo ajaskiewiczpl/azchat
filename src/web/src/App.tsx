@@ -46,12 +46,9 @@ function App() {
                                         <Route path="/messages/*" element={<Messages />} />
                                         <Route path="/profile" element={<Profile />} />
                                         <Route path="/settings" element={<Settings />} />
-                                    </Route>
-                                </Route>
-
-                                <Route element={<RequireAuth allowedRoles={[Roles.ADMIN]} />}>
-                                    <Route path="/admin" element={<MainPageLayout />}>
-                                        <Route index element={<Admin />} />
+                                        <Route element={<RequireAuth allowedRoles={[Roles.ADMIN]} />}>
+                                            <Route path="/admin/*" element={<Admin />}></Route>
+                                        </Route>
                                     </Route>
                                 </Route>
 
