@@ -1,13 +1,16 @@
 ﻿using AutoMapper;
 using AZChat.Data.DTOs;
-using AZChat.Data.Models;
 using AZChat.Hubs;
+using AZChat.Services.Data.Blob;
+using AZChat.Services.Data.CosmosDb;
 using AZChat.Services.Utils;
+using AZChat.Services.Utils.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using User = AZChat.Data.Models.User;
 
 namespace AZChat.Controllers;
 
@@ -17,13 +20,17 @@ namespace AZChat.Controllers;
 public class AdminController : BaseController
 {
     private readonly UserManager<User> _userManager;
+    private readonly IBlobStorageService _blobStorage;
+    private readonly IMessageStorage _messageStorage;
     private readonly IHubContext<AdminHub> _adminHub;
     private readonly IMapper _mapper;
     private readonly ILogger<AdminController> _logger;
 
-    public AdminController(UserManager<User> userManager, IHubContext<AdminHub> adminHub, IMapper mapper, ILogger<AdminController> logger)
+    public AdminController(UserManager<User> userManager, IBlobStorageService blobStorage, IMessageStorage messageStorage, IHubContext<AdminHub> adminHub, IMapper mapper, ILogger<AdminController> logger)
     {
         _userManager = userManager;
+        _blobStorage = blobStorage;
+        _messageStorage = messageStorage;
         _adminHub = adminHub;
         _mapper = mapper;
         _logger = logger;
@@ -39,16 +46,20 @@ public class AdminController : BaseController
     [HttpDelete("users")]
     public async Task<ActionResult> DeleteUsers(DeleteUsersRequestDto request)
     {
-        for (int i = 0; i < 100; i++)
+        int i = 0;
+        foreach (string userID in request.UserIDs)
         {
-            await Task.Delay(20);
+            await _blobStorage.DeleteUserDataAsync(userID);
+            await _messageStorage.DeleteAsync(userID);
+            await _userManager.DeleteByIdAsync(userID);
 
             if (!string.IsNullOrWhiteSpace(request.SignalRConnectionID))
             {
+                float progress = (++i / (float)request.UserIDs.Count) * 100.0f;
                 await _adminHub
                     .Clients
                     .Client(request.SignalRConnectionID)
-                    .SendAsync("onUsersDeleteProgress", i + 1);
+                    .SendAsync("onUsersDeleteProgress", progress);
             }
         }
         

@@ -49,7 +49,7 @@ public class AvatarService : IAvatarService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to download avatar from blob storage");
+            _logger.LogError(ex, "Failed to download avatar from storage");
             throw;
         }
     }
@@ -63,7 +63,7 @@ public class AvatarService : IAvatarService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to upload avatar to blob storage");
+            _logger.LogError(ex, "Failed to upload avatar to storage");
             throw;
         }
     }
@@ -77,15 +77,15 @@ public class AvatarService : IAvatarService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete avatar from blob storage");
+            _logger.LogError(ex, "Failed to delete avatar from storage");
             throw;
         }
     }
 
     private BlobClient GetAvatarBlobClient(string userId)
     {
-        BlobContainerClient containerClient = _blobStorageService.GetAvatarsContainerClient();
-        BlobClient blobClient = containerClient.GetBlobClient($"{userId}.png");
+        BlobContainerClient containerClient = _blobStorageService.GetUserDataContainerClient();
+        BlobClient blobClient = containerClient.GetBlobClient($"{userId}/avatar.png");
         return blobClient;
     }
 }
