@@ -4,5 +4,5 @@
 
 export type DeleteUsersRequestDto = {
     userIDs: Array<string>;
-    signalRConnectionID: string;
+    signalRConnectionID?: string | null;
 };

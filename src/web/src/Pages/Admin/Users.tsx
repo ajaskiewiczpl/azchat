@@ -12,6 +12,7 @@ import {
     LinearProgress,
     Skeleton,
     Stack,
+    TextField,
     Tooltip,
     Typography,
 } from "@mui/material";
@@ -21,7 +22,6 @@ import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { ApiClient } from "../../api/ApiClient";
 import { UserDto } from "../../api/generated";
-import EditIcon from "@mui/icons-material/Edit";
 import KeyIcon from "@mui/icons-material/Key";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -29,48 +29,53 @@ import WarningIcon from "@mui/icons-material/Warning";
 import { LoadingButton } from "@mui/lab";
 import { AdminHubService } from "../../api/AdminHubService";
 
-const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 300 },
-    {
-        field: "userName",
-        headerName: "User Name",
-        flex: 1,
-    },
-    {
-        field: "Actions",
-        headerName: "Actions",
-        width: 120,
-        align: "center",
-        disableColumnMenu: true,
-        disableReorder: true,
-        renderCell: (params: GridRenderCellParams<string>) => (
-            <>
-                <Stack direction="row" spacing={1}>
-                    <Tooltip title="Edit">
-                        <IconButton>
-                            <EditIcon color="primary" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Set Password">
-                        <IconButton>
-                            <KeyIcon color="secondary" />
-                        </IconButton>
-                    </Tooltip>
-                </Stack>
-            </>
-        ),
-    },
-];
-
 type Props = {};
 
 const Users = (props: Props) => {
-    const [usersDeleteInProgress, setUsersDeleteInProgress] = useState(false);
-    const [usersDeleteProgressValue, setUsersDeleteProgressValue] = useState(0);
+    const columns: GridColDef[] = [
+        { field: "id", headerName: "ID", width: 300 },
+        {
+            field: "userName",
+            headerName: "User Name",
+            flex: 1,
+        },
+        {
+            field: " ",
+            headerName: " ",
+            width: 60,
+            align: "center",
+            disableColumnMenu: true,
+            disableReorder: true,
+            renderCell: (params: GridRenderCellParams<string>) => (
+                <>
+                    <Stack direction="row" spacing={1}>
+                        <Tooltip title="Set Password">
+                            <IconButton
+                                onClick={() => {
+                                    setChangePasswordForUser(params.row as UserDto);
+                                }}
+                            >
+                                <KeyIcon color="secondary" />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                </>
+            ),
+        },
+    ];
+
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [users, setUsers] = useState<UserDto[]>([]);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-    const [confirmUsersDeleteDialogVisible, setConfirmUsersDeleteDialogVisible] = useState(false);
+
+    const [userPassword, setUserPassword] = useState("");
+    const [changePasswordForUser, setChangePasswordForUser] = useState<UserDto | null>(null);
+    const [usersDeleteDialogVisible, setUsersDeleteDialogVisible] = useState(false);
+
+    const [changePasswordForUserInProgress, setChangePasswordForUserInProgress] = useState(false);
+    const [usersDeleteInProgress, setUsersDeleteInProgress] = useState(false);
+    const [usersDeleteProgressValue, setUsersDeleteProgressValue] = useState(0);
+
     const { enqueueSnackbar } = useSnackbar();
 
     useEffect(() => {
@@ -92,6 +97,24 @@ const Users = (props: Props) => {
 
     const handleUserSelected = (selectionModel: GridSelectionModel, details: GridCallbackDetails<any>) => {
         setSelectedUserIds(selectionModel.map((userId) => userId.toString()));
+    };
+
+    const handleChangeUserPassword = async () => {
+        setChangePasswordForUserInProgress(true);
+
+        try {
+            const api = new ApiClient();
+            await api.admin.postApiAdminUsersPassword({
+                userID: changePasswordForUser!.id,
+                newPassword: userPassword,
+            });
+            enqueueSnackbar("User password has been successfully changed", { variant: "success" });
+        } catch (err) {
+            enqueueSnackbar("Failed to change user password", { variant: "error" });
+        } finally {
+            setChangePasswordForUser(null);
+            setChangePasswordForUserInProgress(false);
+        }
     };
 
     const handleUsersDelete = async () => {
@@ -121,7 +144,7 @@ const Users = (props: Props) => {
             loadUsers();
         } finally {
             setUsersDeleteInProgress(false);
-            setConfirmUsersDeleteDialogVisible(false);
+            setUsersDeleteDialogVisible(false);
             setUsersDeleteProgressValue(0);
             hubService?.disconnect();
         }
@@ -139,7 +162,7 @@ const Users = (props: Props) => {
                 disableSelectionOnClick
             />
             <Button
-                onClick={() => setConfirmUsersDeleteDialogVisible(true)}
+                onClick={() => setUsersDeleteDialogVisible(true)}
                 disabled={selectedUserIds.length == 0}
                 variant="outlined"
                 startIcon={<DeleteIcon />}
@@ -159,7 +182,42 @@ const Users = (props: Props) => {
                 Refresh
             </Button>
 
-            <Dialog open={confirmUsersDeleteDialogVisible}>
+            <Dialog open={changePasswordForUser != null}>
+                <DialogTitle>
+                    <Stack direction="row" spacing={2}>
+                        <KeyIcon />
+                        <Typography>Set password for user: {changePasswordForUser?.userName}</Typography>
+                    </Stack>
+                </DialogTitle>
+                <DialogContent>
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        name="password"
+                        label="Password"
+                        type="password"
+                        disabled={changePasswordForUserInProgress}
+                        onChange={(event) => {
+                            setUserPassword(event.target.value);
+                        }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <LoadingButton
+                        onClick={handleChangeUserPassword}
+                        color="secondary"
+                        endIcon={<KeyIcon />}
+                        loading={changePasswordForUserInProgress}
+                        loadingPosition="end"
+                    >
+                        Change Password
+                    </LoadingButton>
+                    <Button onClick={() => setChangePasswordForUser(null)}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={usersDeleteDialogVisible}>
                 <DialogTitle>
                     <Stack direction="row" spacing={2}>
                         <WarningIcon />
@@ -188,7 +246,7 @@ const Users = (props: Props) => {
                     >
                         Delete
                     </LoadingButton>
-                    <Button onClick={() => setConfirmUsersDeleteDialogVisible(false)} disabled={usersDeleteInProgress}>
+                    <Button onClick={() => setUsersDeleteDialogVisible(false)} disabled={usersDeleteInProgress}>
                         Cancel
                     </Button>
                 </DialogActions>

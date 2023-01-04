@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ChangeUserPasswordRequest } from '../models/ChangeUserPasswordRequest';
 import type { DeleteUsersRequestDto } from '../models/DeleteUsersRequestDto';
 import type { UserDto } from '../models/UserDto';
 
@@ -33,6 +34,22 @@ requestBody?: DeleteUsersRequestDto,
         return this.httpRequest.request({
             method: 'DELETE',
             url: '/api/Admin/users',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+
+    /**
+     * @param requestBody 
+     * @returns any Success
+     * @throws ApiError
+     */
+    public postApiAdminUsersPassword(
+requestBody?: ChangeUserPasswordRequest,
+): CancelablePromise<any> {
+        return this.httpRequest.request({
+            method: 'POST',
+            url: '/api/Admin/users/password',
             body: requestBody,
             mediaType: 'application/json',
         });

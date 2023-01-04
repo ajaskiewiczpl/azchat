@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AZChat.Data.DTOs;
+using AZChat.Data.DTOs.Admin;
 using AZChat.Hubs;
 using AZChat.Services.Data.Blob;
 using AZChat.Services.Data.CosmosDb;
@@ -41,6 +42,29 @@ public class AdminController : BaseController
     {
         List<User> users = await _userManager.Users.ToListAsync();
         return Ok(_mapper.Map<List<User>, List<UserDto>>(users));
+    }
+
+    [HttpPost("users/password")]
+    public async Task<ActionResult> ChangeUserPassword(ChangeUserPasswordRequest request)
+    {
+        User? user = await _userManager.FindByIdAsync(request.UserID);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        IdentityResult result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+
+        if (result.Succeeded)
+        {
+            return NoContent();
+        }
+        else
+        {
+            return Problem();
+        }
     }
 
     [HttpDelete("users")]

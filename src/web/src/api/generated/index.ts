@@ -12,6 +12,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 export type { AuthenticationResponseDto } from './models/AuthenticationResponseDto';
 export type { ChangePasswordRequestDto } from './models/ChangePasswordRequestDto';
 export type { ChangePasswordResponseDto } from './models/ChangePasswordResponseDto';
+export type { ChangeUserPasswordRequest } from './models/ChangeUserPasswordRequest';
 export type { DeleteUsersRequestDto } from './models/DeleteUsersRequestDto';
 export type { FriendDto } from './models/FriendDto';
 export type { GetMessagesResponse } from './models/GetMessagesResponse';

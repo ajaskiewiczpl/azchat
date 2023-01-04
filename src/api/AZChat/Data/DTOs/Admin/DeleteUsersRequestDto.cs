@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AZChat.Data.DTOs;
+namespace AZChat.Data.DTOs.Admin;
 
 public class DeleteUsersRequestDto
 {
