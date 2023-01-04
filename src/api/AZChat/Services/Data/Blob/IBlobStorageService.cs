@@ -5,5 +5,6 @@ namespace AZChat.Services.Data.Blob;
 public interface IBlobStorageService
 {
     Task EnsureCreatedAsync();
-    BlobContainerClient GetAvatarsContainerClient();
+    BlobContainerClient GetUserDataContainerClient();
+    Task DeleteUserDataAsync(string userID);
 }

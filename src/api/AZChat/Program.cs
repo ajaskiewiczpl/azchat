@@ -134,7 +134,8 @@ namespace AZChat
                     options.Password.RequireUppercase = false;
                     options.Password.RequiredLength = 3;
                 })
-                .AddEntityFrameworkStores<AppDbContext>();
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider);
             
             //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/issues/415
 
@@ -171,7 +172,7 @@ namespace AZChat
                         {
                             StringValues accessToken = context.Request.Query["access_token"];
                             PathString path = context.HttpContext.Request.Path;
-                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hub/chat")))
+                            if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/api/hub")))
                             {
                                 context.Token = accessToken;
                             }
@@ -283,6 +284,7 @@ namespace AZChat
             app.MapHealthChecks(ApiHealthCheck.Name);
             app.MapControllers();
             app.MapHub<ChatHub>("/api/hub/chat");
+            app.MapHub<AdminHub>("/api/hub/admin");
         }
 
         private static void ConfigureLogging(IConfiguration configuration)

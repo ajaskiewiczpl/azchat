@@ -37,7 +37,7 @@
     <Folder Include="Hubs\" />
     <Folder Include="Services\HealthChecks\" />
     <Folder Include="Services\Hubs\Chat\" />
-    <Folder Include="Services\Utils\" />
+    <Folder Include="Services\Utils\Extensions\" />
   </ItemGroup>
 
 </Project>

@@ -26,7 +26,7 @@ public class CosmosDbMessageStorage : IMessageStorage
         ItemResponse<Message> itemResponse = await container.CreateItemAsync(message, new PartitionKey(message.FromUserId));
 
         s.Stop();
-        _logger.LogInformation("Message stored in {time} ms", s.ElapsedMilliseconds);
+        _logger.LogDebug("Message stored in {time} ms, cost: {cost}", s.ElapsedMilliseconds, itemResponse.RequestCharge);
     }
 
     public async Task<GetMessagesResult> GetAsync(string userId, string otherUserId, string? continuationToken)
@@ -46,9 +46,8 @@ public class CosmosDbMessageStorage : IMessageStorage
         FeedResponse<Message> response = await iterator.ReadNextAsync();
         messages.AddRange(response.Resource);
 
-        s.Start();
-
-        _logger.LogInformation("Retrieved {number} messages in {time} ms", messages.Count, s.ElapsedMilliseconds);
+        s.Stop();
+        _logger.LogDebug("Retrieved {number} messages in {time} ms, cost: {cost}", messages.Count, s.ElapsedMilliseconds, response.RequestCharge);
 
         GetMessagesResult result = new GetMessagesResult()
         {
@@ -58,6 +57,35 @@ public class CosmosDbMessageStorage : IMessageStorage
         };
 
         return result;
+    }
+
+    public async Task DeleteAsync(string userId)
+    {
+        Stopwatch s = Stopwatch.StartNew();
+
+        double queryCost = 0.0;
+        double deletionCost = 0.0;
+        int itemsCount = 0;
+
+        Container container = _cosmosDbService.GetMessagesContainer();
+        QueryDefinition query = new QueryDefinition($"select * from c where c.FromUserId = '{userId}' or c.ToUserId = '{userId}'");
+        FeedIterator<Message>? iterator = container.GetItemQueryIterator<Message>(query);
+
+        while (iterator.HasMoreResults)
+        {
+            FeedResponse<Message> feedResponse = await iterator.ReadNextAsync();
+            queryCost += feedResponse.RequestCharge;
+
+            foreach (Message message in feedResponse.Resource)
+            {
+                ItemResponse<Message> itemResponse = await container.DeleteItemAsync<Message>(message.Id.ToString(), new PartitionKey(message.FromUserId));
+                deletionCost += itemResponse.RequestCharge;
+                itemsCount++;
+            }
+        }
+
+        s.Stop();
+        _logger.LogDebug("Deleted {number} messages in {time} ms, deletion cost: {deletionCost}, query cost: {queryCost}", itemsCount, s.ElapsedMilliseconds, deletionCost, queryCost);
     }
 }
 
