@@ -1,10 +1,10 @@
-import React, { useContext, useDebugValue } from "react";
-import AuthContext from "../context/AuthProvider";
+import React, { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 
 const useAuth = () => {
-    const { userName } = useContext(AuthContext);
-    useDebugValue(userName, (userName) => (userName ? "Logged In" : "Logged Out"));
-    return useContext(AuthContext);
+    const user = useSelector((state: RootState) => state.auth.user);
+    return useMemo(() => ({ user }), [user]);
 };
 
 export default useAuth;

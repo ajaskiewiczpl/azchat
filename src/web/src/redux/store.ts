@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import avatarReducer from "./avatarSlice";
+import authReducer from "./authSlice";
 import { azchatApi } from "./azchatApi";
 
 const store = configureStore({
     reducer: {
-        avatar: avatarReducer,
         [azchatApi.reducerPath]: azchatApi.reducer,
+        avatar: avatarReducer,
+        auth: authReducer,
     },
     // Adding the api middleware enables caching, invalidation, polling,
     // and other useful features of `rtk-query`.

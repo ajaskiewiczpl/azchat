@@ -15,7 +15,7 @@ public class AvatarResponse
 }
 
 [ApiController]
-//[Authorize]
+[Authorize]
 [Route("api/[controller]")]
 public class AvatarController : BaseController
 {
@@ -47,8 +47,7 @@ public class AvatarController : BaseController
         }
     }
 
-    [HttpPost()]
-    [Authorize]
+    [HttpPost]
     public async Task<ActionResult<string>> SetAvatar(IFormFile? file, CancellationToken token)
     {
         if (file == null)

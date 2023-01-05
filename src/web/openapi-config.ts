@@ -7,6 +7,7 @@ const config: ConfigFile = {
     outputFile: "./src/redux/azchatApi.ts",
     exportName: "azchatApi",
     hooks: true,
+    flattenArg: true,
 };
 
 export default config;

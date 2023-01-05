@@ -18,13 +18,13 @@ const UserAvatar = (props: UserAvatarProps) => {
             userId: props.userId,
         },
         {
-            skip: fetchAvatar,
+            skip: !fetchAvatar,
         }
     );
 
     useEffect(() => {
         if (props.avatar == undefined) {
-            setFetchAvatar(false);
+            setFetchAvatar(true);
         }
     }, []);
 
