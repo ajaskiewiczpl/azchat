@@ -3,7 +3,6 @@ import jwtDecode from "jwt-decode";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import useRefreshToken from "../hooks/useRefreshToken";
-import customHistory from "./customHistory";
 
 const tokenKeyName = "token";
 
@@ -105,7 +104,6 @@ export const AuthProvider = (props: Props) => {
     const signOut = () => {
         setToken("");
         removeTokenFromLocalStorage();
-        customHistory.replace("/signin", { from: location });
     };
 
     useEffect(() => {
