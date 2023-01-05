@@ -25,6 +25,7 @@ import { setAvatar } from "../redux/avatarSlice";
 import CurrentUserAvatar from "../components/CurrentUserAvatar";
 import { Roles } from "../misc/roles";
 import { Divider } from "@mui/material";
+import { useGetApiAvatarByUserIdQuery } from "../redux/azchatApi";
 
 type Props = {};
 
@@ -36,19 +37,25 @@ const HomePage = (props: Props) => {
     const dispatch = useDispatch();
     const { enqueueSnackbar } = useSnackbar();
 
-    useEffect(() => {
-        const loadAvatar = async () => {
-            try {
-                const api = new ApiClient();
-                const response = await api.avatar.getApiAvatar(userId);
-                dispatch(setAvatar(response));
-            } catch (err) {
-                enqueueSnackbar("Could not load user avatar", { variant: "error" });
-            }
-        };
+    const {
+        isError: avatarError,
+        isSuccess: avatarSuccess,
+        data: avatarData,
+    } = useGetApiAvatarByUserIdQuery({
+        userId: userId,
+    });
 
-        loadAvatar();
-    }, []);
+    useEffect(() => {
+        if (avatarError) {
+            enqueueSnackbar("Could not load user avatar", { variant: "error" });
+        }
+    }, [avatarError]);
+
+    useEffect(() => {
+        if (avatarSuccess) {
+            dispatch(setAvatar(avatarData.avatarData));
+        }
+    }, [avatarSuccess, avatarData]);
 
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);

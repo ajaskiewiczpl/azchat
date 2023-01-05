@@ -1,4 +1,5 @@
-﻿using AZChat.Services.Data.Blob;
+﻿using System.ComponentModel.DataAnnotations;
+using AZChat.Services.Data.Blob;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,8 +8,14 @@ using SixLabors.ImageSharp.Formats.Png;
 
 namespace AZChat.Controllers;
 
+public class AvatarResponse
+{
+    [Required]
+    public string AvatarData { get; set; }
+}
+
 [ApiController]
-[Authorize]
+//[Authorize]
 [Route("api/[controller]")]
 public class AvatarController : BaseController
 {
@@ -22,22 +29,26 @@ public class AvatarController : BaseController
     }
 
     [HttpGet("{userId}")]
-    public async Task<ActionResult<string>> GetAvatar(string userId)
+    public async Task<ActionResult<AvatarResponse>> GetAvatar(string userId)
     {
-        byte[] avatar = await _avatarService.GetAvatarAsync(userId);
+        byte[] avatarBinary = await _avatarService.GetAvatarAsync(userId);
 
-        if (avatar.Any())
+        if (avatarBinary.Any())
         {
-            string response = ImageUtils.ToBase64Png(avatar);
-            return Ok(response);
+            string avatarBase64 = ImageUtils.ToBase64Png(avatarBinary);
+            return Ok(new AvatarResponse()
+            {
+                AvatarData = avatarBase64
+            });
         }
         else
         {
-            return string.Empty;
+            return NoContent();
         }
     }
 
     [HttpPost()]
+    [Authorize]
     public async Task<ActionResult<string>> SetAvatar(IFormFile? file, CancellationToken token)
     {
         if (file == null)
