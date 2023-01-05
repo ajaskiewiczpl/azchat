@@ -26,12 +26,16 @@ function getTokenFromLocalStorage(): string {
 }
 
 function getUserFromToken(token: string) {
-    const { userId, name, role } = jwtDecode<Jwt>(token);
-    return {
-        userId: userId,
-        userName: name,
-        role: role,
-    } as User;
+    if (token && token.length > 1) {
+        const { userId, name, role } = jwtDecode<Jwt>(token);
+        return {
+            userId: userId,
+            userName: name,
+            role: role,
+        } as User;
+    } else {
+        return null;
+    }
 }
 
 const slice = createSlice({
