@@ -19,10 +19,10 @@ type Jwt = {
     role: string;
 };
 
-const tokenKeyName = "token";
+const localStorageTokenKeyName = "token";
 
 function getTokenFromLocalStorage(): string {
-    return localStorage.getItem(tokenKeyName) || "";
+    return localStorage.getItem(localStorageTokenKeyName) || "";
 }
 
 function getUserFromToken(token: string) {
@@ -46,12 +46,12 @@ const slice = createSlice({
     } as AuthState,
     reducers: {
         setToken: (state, { payload: { token } }: PayloadAction<{ token: string }>) => {
-            localStorage.setItem(tokenKeyName, token);
+            localStorage.setItem(localStorageTokenKeyName, token);
             state.token = token;
             state.user = getUserFromToken(token);
         },
         clearToken: (state): void => {
-            localStorage.removeItem(tokenKeyName);
+            localStorage.removeItem(localStorageTokenKeyName);
             state.token = null;
             state.user = null;
         },

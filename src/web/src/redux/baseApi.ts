@@ -57,7 +57,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
     return result;
 };
 
-export const azchatApi = createApi({
+export const baseApi = createApi({
     baseQuery: baseQueryWithReauth,
     endpoints: () => ({}),
 });

@@ -1,7 +1,7 @@
 import Avatar from "@mui/material/Avatar";
 import deepOrange from "@mui/material/colors/deepOrange";
 import React, { useEffect, useState } from "react";
-import { useGetApiAvatarByUserIdQuery } from "../redux/azchatApi";
+import { api } from "../redux/api";
 
 export type UserAvatarProps = {
     userId: string;
@@ -13,14 +13,9 @@ export type UserAvatarProps = {
 
 const UserAvatar = (props: UserAvatarProps) => {
     const [fetchAvatar, setFetchAvatar] = useState(true);
-    const { data } = useGetApiAvatarByUserIdQuery(
-        {
-            userId: props.userId,
-        },
-        {
-            skip: !fetchAvatar,
-        }
-    );
+    const { data } = api.useGetApiAvatarByUserIdQuery(props.userId, {
+        skip: !fetchAvatar,
+    });
 
     useEffect(() => {
         if (props.avatar == undefined) {

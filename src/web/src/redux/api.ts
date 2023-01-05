@@ -1,27 +1,23 @@
-import { azchatApi as api } from "./baseApi";
+import { baseApi as api } from "./baseApi";
 const injectedRtkApi = api.injectEndpoints({
     endpoints: (build) => ({
         getApiAdminUsers: build.query<GetApiAdminUsersApiResponse, GetApiAdminUsersApiArg>({
             query: () => ({ url: `/api/Admin/users` }),
         }),
         deleteApiAdminUsers: build.mutation<DeleteApiAdminUsersApiResponse, DeleteApiAdminUsersApiArg>({
-            query: (queryArg) => ({ url: `/api/Admin/users`, method: "DELETE", body: queryArg.deleteUsersRequestDto }),
+            query: (queryArg) => ({ url: `/api/Admin/users`, method: "DELETE", body: queryArg }),
         }),
         postApiAdminUsersPassword: build.mutation<
             PostApiAdminUsersPasswordApiResponse,
             PostApiAdminUsersPasswordApiArg
         >({
-            query: (queryArg) => ({
-                url: `/api/Admin/users/password`,
-                method: "POST",
-                body: queryArg.changeUserPasswordRequest,
-            }),
+            query: (queryArg) => ({ url: `/api/Admin/users/password`, method: "POST", body: queryArg }),
         }),
         getApiAvatarByUserId: build.query<GetApiAvatarByUserIdApiResponse, GetApiAvatarByUserIdApiArg>({
-            query: (queryArg) => ({ url: `/api/Avatar/${queryArg.userId}` }),
+            query: (queryArg) => ({ url: `/api/Avatar/${queryArg}` }),
         }),
         postApiAvatar: build.mutation<PostApiAvatarApiResponse, PostApiAvatarApiArg>({
-            query: (queryArg) => ({ url: `/api/Avatar`, method: "POST", body: queryArg.body }),
+            query: (queryArg) => ({ url: `/api/Avatar`, method: "POST", body: queryArg }),
         }),
         deleteApiAvatar: build.mutation<DeleteApiAvatarApiResponse, DeleteApiAvatarApiArg>({
             query: () => ({ url: `/api/Avatar`, method: "DELETE" }),
@@ -33,7 +29,7 @@ const injectedRtkApi = api.injectEndpoints({
             query: () => ({ url: `/api/Chat/friends` }),
         }),
         postApiChatSend: build.mutation<PostApiChatSendApiResponse, PostApiChatSendApiArg>({
-            query: (queryArg) => ({ url: `/api/Chat/send`, method: "POST", body: queryArg.sendMessageRequestDto }),
+            query: (queryArg) => ({ url: `/api/Chat/send`, method: "POST", body: queryArg }),
         }),
         getApiChatMessages: build.query<GetApiChatMessagesApiResponse, GetApiChatMessagesApiArg>({
             query: (queryArg) => ({
@@ -42,30 +38,22 @@ const injectedRtkApi = api.injectEndpoints({
             }),
         }),
         postApiIdentitySignup: build.mutation<PostApiIdentitySignupApiResponse, PostApiIdentitySignupApiArg>({
-            query: (queryArg) => ({ url: `/api/Identity/signup`, method: "POST", body: queryArg.userBaseRequestDto }),
+            query: (queryArg) => ({ url: `/api/Identity/signup`, method: "POST", body: queryArg }),
         }),
         postApiIdentitySignin: build.mutation<PostApiIdentitySigninApiResponse, PostApiIdentitySigninApiArg>({
-            query: (queryArg) => ({ url: `/api/Identity/signin`, method: "POST", body: queryArg.userBaseRequestDto }),
+            query: (queryArg) => ({ url: `/api/Identity/signin`, method: "POST", body: queryArg }),
         }),
         postApiIdentityChangepassword: build.mutation<
             PostApiIdentityChangepasswordApiResponse,
             PostApiIdentityChangepasswordApiArg
         >({
-            query: (queryArg) => ({
-                url: `/api/Identity/changepassword`,
-                method: "POST",
-                body: queryArg.changePasswordRequestDto,
-            }),
+            query: (queryArg) => ({ url: `/api/Identity/changepassword`, method: "POST", body: queryArg }),
         }),
         postApiIdentityRefreshtoken: build.mutation<
             PostApiIdentityRefreshtokenApiResponse,
             PostApiIdentityRefreshtokenApiArg
         >({
-            query: (queryArg) => ({
-                url: `/api/Identity/refreshtoken`,
-                method: "POST",
-                body: queryArg.refreshTokenRequestDto,
-            }),
+            query: (queryArg) => ({ url: `/api/Identity/refreshtoken`, method: "POST", body: queryArg }),
         }),
         postApiIdentitySignout: build.mutation<PostApiIdentitySignoutApiResponse, PostApiIdentitySignoutApiArg>({
             query: () => ({ url: `/api/Identity/signout`, method: "POST" }),
@@ -73,26 +61,18 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     overrideExisting: false,
 });
-export { injectedRtkApi as azchatApi };
+export { injectedRtkApi as api };
 export type GetApiAdminUsersApiResponse = /** status 200 Success */ UserDto[];
 export type GetApiAdminUsersApiArg = void;
 export type DeleteApiAdminUsersApiResponse = unknown;
-export type DeleteApiAdminUsersApiArg = {
-    deleteUsersRequestDto: DeleteUsersRequestDto;
-};
+export type DeleteApiAdminUsersApiArg = DeleteUsersRequestDto;
 export type PostApiAdminUsersPasswordApiResponse = unknown;
-export type PostApiAdminUsersPasswordApiArg = {
-    changeUserPasswordRequest: ChangeUserPasswordRequest;
-};
+export type PostApiAdminUsersPasswordApiArg = ChangeUserPasswordRequest;
 export type GetApiAvatarByUserIdApiResponse = /** status 200 Success */ AvatarResponse;
-export type GetApiAvatarByUserIdApiArg = {
-    userId: string;
-};
+export type GetApiAvatarByUserIdApiArg = string;
 export type PostApiAvatarApiResponse = /** status 200 Success */ string;
 export type PostApiAvatarApiArg = {
-    body: {
-        file?: Blob;
-    };
+    file?: Blob;
 };
 export type DeleteApiAvatarApiResponse = unknown;
 export type DeleteApiAvatarApiArg = void;
@@ -101,30 +81,20 @@ export type GetApiChatPingApiArg = void;
 export type GetApiChatFriendsApiResponse = /** status 200 Success */ FriendDto[];
 export type GetApiChatFriendsApiArg = void;
 export type PostApiChatSendApiResponse = /** status 200 Success */ MessageDto;
-export type PostApiChatSendApiArg = {
-    sendMessageRequestDto: SendMessageRequestDto;
-};
+export type PostApiChatSendApiArg = SendMessageRequestDto;
 export type GetApiChatMessagesApiResponse = /** status 200 Success */ GetMessagesResponse;
 export type GetApiChatMessagesApiArg = {
     otherUserId?: string;
     continuationToken?: string;
 };
 export type PostApiIdentitySignupApiResponse = /** status 200 Success */ RegistrationResponseDto;
-export type PostApiIdentitySignupApiArg = {
-    userBaseRequestDto: UserBaseRequestDto;
-};
+export type PostApiIdentitySignupApiArg = UserBaseRequestDto;
 export type PostApiIdentitySigninApiResponse = /** status 200 Success */ AuthenticationResponseDto;
-export type PostApiIdentitySigninApiArg = {
-    userBaseRequestDto: UserBaseRequestDto;
-};
+export type PostApiIdentitySigninApiArg = UserBaseRequestDto;
 export type PostApiIdentityChangepasswordApiResponse = /** status 200 Success */ ChangePasswordResponseDto;
-export type PostApiIdentityChangepasswordApiArg = {
-    changePasswordRequestDto: ChangePasswordRequestDto;
-};
+export type PostApiIdentityChangepasswordApiArg = ChangePasswordRequestDto;
 export type PostApiIdentityRefreshtokenApiResponse = /** status 200 Success */ AuthenticationResponseDto;
-export type PostApiIdentityRefreshtokenApiArg = {
-    refreshTokenRequestDto: RefreshTokenRequestDto;
-};
+export type PostApiIdentityRefreshtokenApiArg = RefreshTokenRequestDto;
 export type PostApiIdentitySignoutApiResponse = unknown;
 export type PostApiIdentitySignoutApiArg = void;
 export type UserDto = {

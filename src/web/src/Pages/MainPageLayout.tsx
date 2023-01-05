@@ -24,7 +24,7 @@ import { setAvatar } from "../redux/avatarSlice";
 import CurrentUserAvatar from "../components/CurrentUserAvatar";
 import { Roles } from "../misc/roles";
 import { Divider } from "@mui/material";
-import { useGetApiAvatarByUserIdQuery, usePostApiIdentitySignoutMutation } from "../redux/azchatApi";
+import { useGetApiAvatarByUserIdQuery, usePostApiIdentitySignoutMutation } from "../redux/api";
 
 type Props = {};
 
@@ -40,9 +40,7 @@ const HomePage = (props: Props) => {
         isError: avatarError,
         isSuccess: avatarSuccess,
         data: avatarData,
-    } = useGetApiAvatarByUserIdQuery({
-        userId: user!.userId,
-    });
+    } = useGetApiAvatarByUserIdQuery(user!.userId);
 
     useEffect(() => {
         if (avatarError) {

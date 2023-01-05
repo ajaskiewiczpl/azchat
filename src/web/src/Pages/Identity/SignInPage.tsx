@@ -5,13 +5,13 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import { Box, Container } from "@mui/system";
-import { azchatApi } from "../../redux/azchatApi";
+import { api } from "../../redux/api";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/authSlice";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
 
 const SignInPage = () => {
-    const [signIn, { isLoading, isError }] = azchatApi.usePostApiIdentitySigninMutation();
+    const [signIn, { isLoading, isError }] = api.usePostApiIdentitySigninMutation();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,10 +36,8 @@ const SignInPage = () => {
 
         try {
             const response = await signIn({
-                userBaseRequestDto: {
-                    userName: userName,
-                    password: password,
-                },
+                userName: userName,
+                password: password,
             }).unwrap();
 
             dispatch(
