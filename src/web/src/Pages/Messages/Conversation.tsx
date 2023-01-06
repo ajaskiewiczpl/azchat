@@ -4,31 +4,46 @@ import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ChatHubService } from "../../api/ChatHubService";
 import useAuth from "../../hooks/useAuth";
-import { MessageDto, MessageStatus } from "../../api/generated";
 import LoadingButton from "@mui/lab/LoadingButton";
 import Message from "./Message";
 import { useSnackbar } from "notistack";
-import { ApiClient } from "../../api/ApiClient";
+import { api, MessageDto } from "../../redux/api";
 
 type InnerConversationProps = {
     otherUserId: string;
 };
 
 const InnerConversation = (props: InnerConversationProps) => {
-    const { userId } = useAuth();
+    const { user } = useAuth();
     const { enqueueSnackbar } = useSnackbar();
     const [connection, setConnection] = useState<ChatHubService | null>(null);
-    const [isLoadingMessages, setIsLoadingMessages] = useState(true);
-    const [continuationToken, setContinuationToken] = useState<string | null>(null);
-    const [hasMoreMessages, setHasMoreMessages] = useState(false);
     const [messages, setMessages] = useState<MessageDto[]>([]);
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
     const messageTextRef = useRef<HTMLInputElement | null>(null);
 
+    const [
+        fetchMessagesAsync,
+        {
+            isFetching: isFetchingMessages,
+            isLoading: isLoadingMessages,
+            isSuccess: isSuccessMessages,
+            isError: isErrorMessages,
+            data: messagesResponse,
+        },
+    ] = api.useLazyGetApiChatMessagesQuery({});
+
+    const loadMessagesInProgress = isFetchingMessages || isLoadingMessages;
+
+    useEffect(() => {
+        if (isErrorMessages) {
+            enqueueSnackbar("Could not fetch messages", { variant: "error" });
+        }
+    }, [isErrorMessages]);
+
     useEffect(() => {
         // TODO instead of creating multiple hub connections, receive message from the parent Messages.tsx component
 
-        if (props.otherUserId == userId) {
+        if (props.otherUserId == user!.userId) {
             return; // conversation with self - don't subscribe to incoming messages
         }
 
@@ -43,7 +58,7 @@ const InnerConversation = (props: InnerConversationProps) => {
         };
 
         connect();
-    }, []);
+    }, [isSuccessMessages]);
 
     useEffect(() => {
         fetchMessages();
@@ -70,18 +85,12 @@ const InnerConversation = (props: InnerConversationProps) => {
     }, [messages]);
 
     const fetchMessages = async () => {
-        try {
-            setIsLoadingMessages(true);
-            const api = new ApiClient();
-            const response = await api.chat.getApiChatMessages(props.otherUserId, continuationToken || "");
-            setContinuationToken(response.continuationToken);
-            setHasMoreMessages(response.hasMoreMessages);
-            setMessages((currentMessages) => [...response.messages, ...currentMessages]);
-        } catch (err) {
-            enqueueSnackbar("Could not fetch messages", { variant: "error" });
-        } finally {
-            setIsLoadingMessages(false);
-        }
+        const response = await fetchMessagesAsync({
+            otherUserId: props.otherUserId,
+            continuationToken: messagesResponse?.continuationToken,
+        }).unwrap();
+
+        setMessages((currentMessages) => [...response.messages, ...currentMessages]);
     };
 
     const handleTextFieldKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
@@ -92,10 +101,10 @@ const InnerConversation = (props: InnerConversationProps) => {
 
         const newMessage = {
             id: crypto.randomUUID(),
-            fromUserId: userId,
+            fromUserId: user!.userId,
             toUserId: props.otherUserId,
             body: messageText,
-            status: MessageStatus.NEW,
+            status: "New",
         } as MessageDto;
 
         messageTextRef.current!.value = "";
@@ -127,8 +136,8 @@ const InnerConversation = (props: InnerConversationProps) => {
                 onClick={fetchMessages}
                 endIcon={<RefreshIcon />}
                 loadingPosition="center"
-                loading={isLoadingMessages}
-                sx={{ display: hasMoreMessages || isLoadingMessages ? "flex" : "none" }}
+                loading={loadMessagesInProgress}
+                sx={{ display: messagesResponse?.hasMoreMessages || loadMessagesInProgress ? "flex" : "none" }}
             >
                 Load more
             </LoadingButton>
@@ -136,7 +145,7 @@ const InnerConversation = (props: InnerConversationProps) => {
                 {messages.map((message) => (
                     <Message
                         key={message.id}
-                        userId={userId}
+                        userId={user!.userId}
                         otherUserId={props.otherUserId}
                         message={message}
                         updateMessage={updateMessage}

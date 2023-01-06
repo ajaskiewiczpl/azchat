@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using AZChat.Data.DTOs;
 using AZChat.Services.Data.Blob;
 using AZChat.Services.Utils;
 using Microsoft.AspNetCore.Authorization;
@@ -7,12 +7,6 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 
 namespace AZChat.Controllers;
-
-public class AvatarResponse
-{
-    [Required]
-    public string AvatarData { get; set; }
-}
 
 [ApiController]
 [Authorize]

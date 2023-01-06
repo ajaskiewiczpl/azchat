@@ -2,7 +2,6 @@ import {
     Alert,
     Box,
     Button,
-    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -10,7 +9,6 @@ import {
     DialogTitle,
     IconButton,
     LinearProgress,
-    Skeleton,
     Stack,
     TextField,
     Tooltip,
@@ -20,14 +18,13 @@ import { Container } from "@mui/system";
 import { DataGrid, GridCallbackDetails, GridColDef, GridRenderCellParams, GridSelectionModel } from "@mui/x-data-grid";
 import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
-import { ApiClient } from "../../api/ApiClient";
-import { UserDto } from "../../api/generated";
 import KeyIcon from "@mui/icons-material/Key";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import WarningIcon from "@mui/icons-material/Warning";
 import { LoadingButton } from "@mui/lab";
 import { AdminHubService } from "../../api/AdminHubService";
+import { api, UserDto } from "../../redux/api";
 
 type Props = {};
 
@@ -64,7 +61,26 @@ const Users = (props: Props) => {
         },
     ];
 
-    const [loadingUsers, setLoadingUsers] = useState(false);
+    const {
+        isFetching: isFetchingUsers,
+        isLoading: isLoadingUsers,
+        isSuccess: isSuccessUsers,
+        isError: isErrorUsers,
+        error: errorUsers,
+        data: loadedUsers,
+        refetch: refetchUsers,
+    } = api.useGetApiAdminUsersQuery();
+
+    const [
+        changePasswordForUserAsync,
+        { isLoading: isChangingPassword, isError: isChangePasswordError, isSuccess: isChangePasswordSuccess },
+    ] = api.usePostApiAdminUsersPasswordMutation();
+
+    const [
+        deleteUsersAsync,
+        { isLoading: isDeletingUsers, isSuccess: isUsersDeleteSuccess, isError: isUsersDeleteError },
+    ] = api.useDeleteApiAdminUsersMutation();
+
     const [users, setUsers] = useState<UserDto[]>([]);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
@@ -72,39 +88,31 @@ const Users = (props: Props) => {
     const [changePasswordForUser, setChangePasswordForUser] = useState<UserDto | null>(null);
     const [usersDeleteDialogVisible, setUsersDeleteDialogVisible] = useState(false);
 
-    const [changePasswordForUserInProgress, setChangePasswordForUserInProgress] = useState(false);
-    const [usersDeleteInProgress, setUsersDeleteInProgress] = useState(false);
     const [usersDeleteProgressValue, setUsersDeleteProgressValue] = useState(0);
 
     const { enqueueSnackbar } = useSnackbar();
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+    const loadUsersInProgress = isFetchingUsers || isLoadingUsers;
 
-    const loadUsers = async () => {
-        try {
-            setLoadingUsers(true);
-            const api = new ApiClient();
-            const response = await api.admin.getApiAdminUsers();
-            setUsers(response);
-        } catch (err) {
-            enqueueSnackbar("Failed to fetch users", { variant: "error" });
-        } finally {
-            setLoadingUsers(false);
+    useEffect(() => {
+        if (isSuccessUsers) {
+            setUsers(loadedUsers);
         }
-    };
+    }, [isSuccessUsers]);
+
+    useEffect(() => {
+        if (isErrorUsers) {
+            enqueueSnackbar("Failed to fetch users", { variant: "error" });
+        }
+    }, [isErrorUsers]);
 
     const handleUserSelected = (selectionModel: GridSelectionModel, details: GridCallbackDetails<any>) => {
         setSelectedUserIds(selectionModel.map((userId) => userId.toString()));
     };
 
     const handleChangeUserPassword = async () => {
-        setChangePasswordForUserInProgress(true);
-
         try {
-            const api = new ApiClient();
-            await api.admin.postApiAdminUsersPassword({
+            await changePasswordForUserAsync({
                 userID: changePasswordForUser!.id,
                 newPassword: userPassword,
             });
@@ -113,7 +121,6 @@ const Users = (props: Props) => {
             enqueueSnackbar("Failed to change user password", { variant: "error" });
         } finally {
             setChangePasswordForUser(null);
-            setChangePasswordForUserInProgress(false);
         }
     };
 
@@ -121,16 +128,13 @@ const Users = (props: Props) => {
         let hubService: AdminHubService | null = null;
 
         try {
-            setUsersDeleteInProgress(true);
-
             hubService = new AdminHubService();
             const hubConnectionId = await hubService.connect();
             hubService?.onUsersDeleteProgress((progress) => {
                 setUsersDeleteProgressValue(progress);
             });
 
-            const api = new ApiClient();
-            await api.admin.deleteApiAdminUsers({
+            await deleteUsersAsync({
                 userIDs: selectedUserIds,
                 signalRConnectionID: hubConnectionId,
             });
@@ -141,9 +145,8 @@ const Users = (props: Props) => {
             enqueueSnackbar("Successfully deleted selected users", { variant: "success" });
         } catch (err) {
             enqueueSnackbar("Failed to delete some or all of the selected users", { variant: "error" });
-            loadUsers();
+            refetchUsers();
         } finally {
-            setUsersDeleteInProgress(false);
             setUsersDeleteDialogVisible(false);
             setUsersDeleteProgressValue(0);
             hubService?.disconnect();
@@ -155,7 +158,7 @@ const Users = (props: Props) => {
             <DataGrid
                 autoPageSize
                 onSelectionModelChange={handleUserSelected}
-                loading={loadingUsers}
+                loading={loadUsersInProgress}
                 rows={users}
                 columns={columns}
                 checkboxSelection
@@ -172,8 +175,8 @@ const Users = (props: Props) => {
                 Delete Selected ({selectedUserIds.length})
             </Button>
             <Button
-                onClick={loadUsers}
-                disabled={loadingUsers}
+                onClick={refetchUsers}
+                disabled={loadUsersInProgress}
                 variant="outlined"
                 startIcon={<RefreshIcon />}
                 color="primary"
@@ -197,7 +200,7 @@ const Users = (props: Props) => {
                         name="password"
                         label="Password"
                         type="password"
-                        disabled={changePasswordForUserInProgress}
+                        disabled={isChangingPassword}
                         onChange={(event) => {
                             setUserPassword(event.target.value);
                         }}
@@ -208,7 +211,7 @@ const Users = (props: Props) => {
                         onClick={handleChangeUserPassword}
                         color="secondary"
                         endIcon={<KeyIcon />}
-                        loading={changePasswordForUserInProgress}
+                        loading={isChangingPassword}
                         loadingPosition="end"
                     >
                         Change Password
@@ -233,7 +236,7 @@ const Users = (props: Props) => {
                     <LinearProgress
                         variant="determinate"
                         value={usersDeleteProgressValue}
-                        sx={{ m: 2, display: usersDeleteInProgress ? "block" : "none" }}
+                        sx={{ m: 2, display: isDeletingUsers ? "block" : "none" }}
                     />
                 </DialogContent>
                 <DialogActions>
@@ -241,12 +244,12 @@ const Users = (props: Props) => {
                         onClick={handleUsersDelete}
                         color="error"
                         endIcon={<DeleteIcon />}
-                        loading={usersDeleteInProgress}
+                        loading={isDeletingUsers}
                         loadingPosition="end"
                     >
                         Delete
                     </LoadingButton>
-                    <Button onClick={() => setUsersDeleteDialogVisible(false)} disabled={usersDeleteInProgress}>
+                    <Button onClick={() => setUsersDeleteDialogVisible(false)} disabled={isDeletingUsers}>
                         Cancel
                     </Button>
                 </DialogActions>

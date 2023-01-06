@@ -24,14 +24,14 @@ import { setAvatar } from "../redux/avatarSlice";
 import CurrentUserAvatar from "../components/CurrentUserAvatar";
 import { Roles } from "../misc/roles";
 import { Divider } from "@mui/material";
-import { useGetApiAvatarByUserIdQuery, usePostApiIdentitySignoutMutation } from "../redux/api";
+import { api } from "../redux/api";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
     const { user } = useAuth();
     const logout = useLogout();
-    const [signOut, { isError: signOutError, isLoading: isSigningOut }] = usePostApiIdentitySignoutMutation();
+    const [signOut, { isError: signOutError, isLoading: isSigningOut }] = api.usePostApiIdentitySignoutMutation();
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
     const dispatch = useDispatch();
     const { enqueueSnackbar } = useSnackbar();
@@ -40,7 +40,7 @@ const HomePage = (props: Props) => {
         isError: avatarError,
         isSuccess: avatarSuccess,
         data: avatarData,
-    } = useGetApiAvatarByUserIdQuery(user!.userId);
+    } = api.useGetApiAvatarByUserIdQuery(user!.userId);
 
     useEffect(() => {
         if (avatarError) {
@@ -50,7 +50,7 @@ const HomePage = (props: Props) => {
 
     useEffect(() => {
         if (avatarSuccess) {
-            dispatch(setAvatar(avatarData.avatarData));
+            dispatch(setAvatar(avatarData?.avatarData));
         }
     }, [avatarSuccess, avatarData]);
 
@@ -106,11 +106,6 @@ const HomePage = (props: Props) => {
                     </Button>
                     <Box sx={{ flexGrow: 1 }} />
                     <Box>
-                        {/* <IconButton size="large" aria-label="show 17 new notifications" color="inherit">
-                                <Badge badgeContent={17} color="error">
-                                    <NotificationIcon />
-                                </Badge>
-                            </IconButton> */}
                         <IconButton color="inherit" onClick={handleOpenUserMenu}>
                             <CurrentUserAvatar width={32} height={32} />
                         </IconButton>

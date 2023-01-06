@@ -1,7 +1,6 @@
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import useRefreshToken from "../hooks/useRefreshToken";
-import { ApiClient } from "./ApiClient";
-import { MessageDto } from "./generated/models/MessageDto";
+import { baseUrl } from "../app-config";
+import { MessageDto } from "../redux/api";
 
 type OnMessageCallback = (message: MessageDto) => void;
 
@@ -9,14 +8,15 @@ export class ChatHubService {
     private readonly hub: HubConnection;
 
     constructor() {
-        const hubUrl = new ApiClient().request.config.BASE + "/api/hub/chat";
+        const hubUrl = baseUrl + "/api/hub/chat";
         this.hub = new HubConnectionBuilder()
             .withAutomaticReconnect()
             .withUrl(hubUrl, {
                 withCredentials: false,
                 accessTokenFactory: async () => {
-                    const api = new ApiClient();
-                    await api.chat.getApiChatPing(); // make dummy API call to refresh and store new token in local storage if needed
+                    // TODO
+                    // const api = new ApiClient();
+                    // await api.chat.getApiChatPing(); // make dummy API call to refresh and store new token in local storage if needed
                     return localStorage.getItem("token") || "";
                 },
             })

@@ -1,8 +1,7 @@
 import { BaseQueryFn, createApi, FetchArgs, fetchBaseQuery, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
+import { baseUrl } from "../app-config";
 import { clearToken, setToken } from "./authSlice";
 import { RootState } from "./store";
-
-const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
 const baseQuery = fetchBaseQuery({
     baseUrl: baseUrl,
