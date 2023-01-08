@@ -95,10 +95,10 @@ const Users = (props: Props) => {
     const loadUsersInProgress = isFetchingUsers || isLoadingUsers;
 
     useEffect(() => {
-        if (isSuccessUsers) {
+        if (!isFetchingUsers && !isLoadingUsers && isSuccessUsers && loadedUsers) {
             setUsers(loadedUsers);
         }
-    }, [isSuccessUsers]);
+    }, [isFetchingUsers, isLoadingUsers]);
 
     useEffect(() => {
         if (isErrorUsers) {
@@ -115,7 +115,7 @@ const Users = (props: Props) => {
             await changePasswordForUserAsync({
                 userID: changePasswordForUser!.id,
                 newPassword: userPassword,
-            });
+            }).unwrap();
             enqueueSnackbar("User password has been successfully changed", { variant: "success" });
         } catch (err) {
             enqueueSnackbar("Failed to change user password", { variant: "error" });
@@ -137,7 +137,7 @@ const Users = (props: Props) => {
             await deleteUsersAsync({
                 userIDs: selectedUserIds,
                 signalRConnectionID: hubConnectionId,
-            });
+            }).unwrap();
 
             setUsers((users) => users.filter((user) => !selectedUserIds.includes(user.id)));
             setSelectedUserIds([]);

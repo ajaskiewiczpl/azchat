@@ -48,6 +48,7 @@ const AvatarSettings = (props: Props) => {
 
     const handleAvatarUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         try {
+            // https://github.com/reduxjs/redux-toolkit/issues/3063
             const file = e.target.files?.[0];
             const response = await uploadAvatarAsync({
                 file,
