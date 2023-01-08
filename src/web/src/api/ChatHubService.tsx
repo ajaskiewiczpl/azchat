@@ -32,6 +32,7 @@ export class ChatHubService {
     }
 
     disconnect() {
+        this.hub.off("onMessage");
         this.hub
             .stop()
             .catch((err) => console.error("Error while disconnecting", err))

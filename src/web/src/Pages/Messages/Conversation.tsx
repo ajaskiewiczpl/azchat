@@ -16,7 +16,7 @@ type InnerConversationProps = {
 const InnerConversation = (props: InnerConversationProps) => {
     const { user } = useAuth();
     const { enqueueSnackbar } = useSnackbar();
-    const [connection, setConnection] = useState<ChatHubService | null>(null);
+    const [hubConnection, setHubConnection] = useState<ChatHubService | null>(null);
     const [messages, setMessages] = useState<MessageDto[]>([]);
     const lastMessageRef = useRef<HTMLLIElement | null>(null);
     const messageTextRef = useRef<HTMLInputElement | null>(null);
@@ -31,6 +31,8 @@ const InnerConversation = (props: InnerConversationProps) => {
             data: messagesResponse,
         },
     ] = api.useLazyGetApiChatMessagesQuery({});
+
+    const [sendMessageAsync] = api.usePostApiChatSendMutation();
 
     const loadMessagesInProgress = isFetchingMessages || isLoadingMessages;
 
@@ -51,7 +53,7 @@ const InnerConversation = (props: InnerConversationProps) => {
             try {
                 const chatHubService = new ChatHubService();
                 await chatHubService.connect();
-                setConnection(chatHubService);
+                setHubConnection(chatHubService);
             } catch (err) {
                 enqueueSnackbar("Could not connect to server", { variant: "error" });
             }
@@ -65,7 +67,7 @@ const InnerConversation = (props: InnerConversationProps) => {
     }, []);
 
     useEffect(() => {
-        connection?.onMessage((message) => {
+        hubConnection?.onMessage((message) => {
             if (message.fromUserId != props.otherUserId) {
                 return;
             }
@@ -74,9 +76,9 @@ const InnerConversation = (props: InnerConversationProps) => {
         });
 
         return () => {
-            connection ? connection.disconnect() : null;
+            hubConnection ? hubConnection.disconnect() : null;
         };
-    }, [connection]);
+    }, [hubConnection]);
 
     useEffect(() => {
         lastMessageRef.current?.scrollIntoView({
@@ -93,22 +95,25 @@ const InnerConversation = (props: InnerConversationProps) => {
         setMessages((currentMessages) => [...response.messages, ...currentMessages]);
     };
 
-    const handleTextFieldKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
-        const messageText = messageTextRef.current?.value;
-        if (event.key != "Enter" || messageText == undefined || messageText?.length == 0) {
-            return;
+    const sendMessage = async (message: MessageDto) => {
+        updateMessage(message.id, {
+            ...message,
+            status: "Sending",
+        });
+
+        try {
+            const responseMessage = await sendMessageAsync({
+                recipientUserId: props.otherUserId,
+                body: message.body,
+            }).unwrap();
+
+            updateMessage(message.id, responseMessage);
+        } catch (err) {
+            updateMessage(message.id, {
+                ...message,
+                status: "Error",
+            });
         }
-
-        const newMessage = {
-            id: crypto.randomUUID(),
-            fromUserId: user!.userId,
-            toUserId: props.otherUserId,
-            body: messageText,
-            status: "New",
-        } as MessageDto;
-
-        messageTextRef.current!.value = "";
-        setMessages((oldMessages) => [...oldMessages, newMessage]);
     };
 
     const updateMessage = (id: string, message: MessageDto) => {
@@ -130,6 +135,25 @@ const InnerConversation = (props: InnerConversationProps) => {
         );
     };
 
+    const handleTextFieldKeyDown = async (event: KeyboardEvent<HTMLInputElement>) => {
+        const messageText = messageTextRef.current?.value;
+        if (event.key != "Enter" || messageText == undefined || messageText?.length == 0) {
+            return;
+        }
+
+        const newMessage = {
+            id: crypto.randomUUID(),
+            fromUserId: user!.userId,
+            toUserId: props.otherUserId,
+            body: messageText,
+            status: "New",
+        } as MessageDto;
+
+        messageTextRef.current!.value = "";
+        setMessages((oldMessages) => [...oldMessages, newMessage]);
+        sendMessage(newMessage);
+    };
+
     return (
         <Box sx={{ m: 1, height: "90vh", display: "flex", flexDirection: "column" }}>
             <LoadingButton
@@ -144,11 +168,11 @@ const InnerConversation = (props: InnerConversationProps) => {
             <List sx={{ overflow: "auto" }}>
                 {messages.map((message) => (
                     <Message
-                        key={message.id}
+                        key={`message.id-${crypto.randomUUID()}`}
                         userId={user!.userId}
                         otherUserId={props.otherUserId}
                         message={message}
-                        updateMessage={updateMessage}
+                        sendMessage={sendMessage}
                     />
                 ))}
                 <ListItem key="last" ref={lastMessageRef} />

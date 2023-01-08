@@ -117,7 +117,7 @@ export type FriendDto = {
     userName: string;
     unreadMessagesCount: number;
 };
-export type MessageStatus = "New" | "Sending" | "Sent" | "Received";
+export type MessageStatus = "New" | "Sending" | "Sent" | "Received" | "Error";
 export type MessageDto = {
     id: string;
     status: MessageStatus;
