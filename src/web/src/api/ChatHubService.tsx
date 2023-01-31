@@ -1,23 +1,35 @@
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import useRefreshToken from "../hooks/useRefreshToken";
-import { ApiClient } from "./ApiClient";
-import { MessageDto } from "./generated/models/MessageDto";
+import axios from "axios";
+import { baseUrl } from "../app-config";
+import { MessageDto } from "../redux/api";
 
 type OnMessageCallback = (message: MessageDto) => void;
 
 export class ChatHubService {
     private readonly hub: HubConnection;
 
-    constructor() {
-        const hubUrl = new ApiClient().request.config.BASE + "/api/hub/chat";
+    private authToken: string;
+
+    constructor(initialToken: string) {
+        const hubUrl = baseUrl + "/api/hub/chat";
+        this.authToken = initialToken;
         this.hub = new HubConnectionBuilder()
             .withAutomaticReconnect()
             .withUrl(hubUrl, {
                 withCredentials: false,
                 accessTokenFactory: async () => {
-                    const api = new ApiClient();
-                    await api.chat.getApiChatPing(); // make dummy API call to refresh and store new token in local storage if needed
-                    return localStorage.getItem("token") || "";
+                    const response = await axios.post(
+                        `/api/identity/refreshtoken`,
+                        {
+                            token: this.authToken,
+                        },
+                        {
+                            baseURL: baseUrl,
+                            withCredentials: true,
+                        }
+                    );
+                    this.authToken = response.data.token;
+                    return this.authToken;
                 },
             })
             .build();
@@ -32,6 +44,7 @@ export class ChatHubService {
     }
 
     disconnect() {
+        this.hub.off("onMessage");
         this.hub
             .stop()
             .catch((err) => console.error("Error while disconnecting", err))

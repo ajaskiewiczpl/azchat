@@ -9,11 +9,10 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useEffect, useState } from "react";
-import { ApiClient } from "../api/ApiClient";
 import useLogout from "../hooks/useLogout";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
 import { Link } from "react-router-dom";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
@@ -25,30 +24,36 @@ import { setAvatar } from "../redux/avatarSlice";
 import CurrentUserAvatar from "../components/CurrentUserAvatar";
 import { Roles } from "../misc/roles";
 import { Divider } from "@mui/material";
+import { api } from "../redux/api";
 
 type Props = {};
 
 const HomePage = (props: Props) => {
-    const { userId, userName, role } = useAuth();
+    const { user } = useAuth();
     const logout = useLogout();
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [signOut, { isError: signOutError, isLoading: isSigningOut }] = api.usePostApiIdentitySignoutMutation();
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
     const dispatch = useDispatch();
     const { enqueueSnackbar } = useSnackbar();
 
-    useEffect(() => {
-        const loadAvatar = async () => {
-            try {
-                const api = new ApiClient();
-                const response = await api.avatar.getApiAvatar(userId);
-                dispatch(setAvatar(response));
-            } catch (err) {
-                enqueueSnackbar("Could not load user avatar", { variant: "error" });
-            }
-        };
+    const {
+        isError: avatarError,
+        isSuccess: avatarSuccess,
+        data: avatarData,
+        error: avatarErrorData,
+    } = api.useGetApiAvatarByUserIdQuery(user!.userId);
 
-        loadAvatar();
-    }, []);
+    useEffect(() => {
+        if (avatarError) {
+            enqueueSnackbar("Could not load user avatar", { variant: "error" });
+        }
+    }, [avatarError]);
+
+    useEffect(() => {
+        if (avatarSuccess) {
+            dispatch(setAvatar(avatarData?.avatarData));
+        }
+    }, [avatarSuccess, avatarData]);
 
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);
@@ -60,18 +65,16 @@ const HomePage = (props: Props) => {
 
     const handleLogoutClick = async () => {
         try {
-            setIsLoggingOut(true);
-            const api = new ApiClient();
-            api.request.config.WITH_CREDENTIALS = true;
-            await api.identity.postApiIdentitySignout();
+            await signOut();
         } catch (err) {
+            enqueueSnackbar("Error occurred when logging out", { variant: "error" });
         } finally {
             logout();
         }
     };
 
     const renderAdminMenu = () => {
-        if (role == Roles.ADMIN) {
+        if (user!.role == Roles.ADMIN) {
             return (
                 <div>
                     <MenuItem
@@ -79,7 +82,7 @@ const HomePage = (props: Props) => {
                         to="/admin"
                         key="admin"
                         onClick={closeUserMenu}
-                        disabled={isLoggingOut}
+                        disabled={isSigningOut}
                         sx={{ mt: 1 }}
                     >
                         <ListItemIcon>
@@ -104,11 +107,6 @@ const HomePage = (props: Props) => {
                     </Button>
                     <Box sx={{ flexGrow: 1 }} />
                     <Box>
-                        {/* <IconButton size="large" aria-label="show 17 new notifications" color="inherit">
-                                <Badge badgeContent={17} color="error">
-                                    <NotificationIcon />
-                                </Badge>
-                            </IconButton> */}
                         <IconButton color="inherit" onClick={handleOpenUserMenu}>
                             <CurrentUserAvatar width={32} height={32} />
                         </IconButton>
@@ -128,7 +126,7 @@ const HomePage = (props: Props) => {
                             open={Boolean(anchorElUser)}
                             onClose={closeUserMenu}
                         >
-                            <ListSubheader>{userName}</ListSubheader>
+                            <ListSubheader>{user!.userName}</ListSubheader>
                             <Divider />
                             {renderAdminMenu()}
                             <MenuItem
@@ -136,7 +134,7 @@ const HomePage = (props: Props) => {
                                 to="/profile"
                                 key="profile"
                                 onClick={closeUserMenu}
-                                disabled={isLoggingOut}
+                                disabled={isSigningOut}
                             >
                                 <ListItemIcon>
                                     <AccountCircle />
@@ -148,14 +146,14 @@ const HomePage = (props: Props) => {
                                 to="/settings"
                                 key="settings"
                                 onClick={closeUserMenu}
-                                disabled={isLoggingOut}
+                                disabled={isSigningOut}
                             >
                                 <ListItemIcon>
                                     <SettingsIcon />
                                 </ListItemIcon>
                                 <ListItemText>Settings</ListItemText>
                             </MenuItem>
-                            <MenuItem key="signout" onClick={handleLogoutClick} disabled={isLoggingOut}>
+                            <MenuItem key="signout" onClick={handleLogoutClick} disabled={isSigningOut}>
                                 <ListItemIcon>
                                     <LogoutIcon />
                                 </ListItemIcon>

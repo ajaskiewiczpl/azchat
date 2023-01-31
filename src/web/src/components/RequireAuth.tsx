@@ -6,12 +6,12 @@ export type RequireAuthProps = {
 };
 
 const RequireAuth = (props: RequireAuthProps) => {
-    const { token, role } = useAuth();
+    const { user } = useAuth();
     const location = useLocation();
 
-    if (token.length > 0) {
+    if (user) {
         if ((props.allowedRoles || []).length > 0) {
-            if (props.allowedRoles!.includes(role)) {
+            if (props.allowedRoles!.includes(user.role)) {
                 return <Outlet />;
             } else {
                 return <Navigate to="/forbidden" state={{ from: location }} replace />;

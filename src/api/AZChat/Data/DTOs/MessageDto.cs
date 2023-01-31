@@ -8,7 +8,8 @@ public enum MessageStatus
     New,
     Sending,
     Sent,
-    Received
+    Received,
+    Error
 }
 
 public class MessageDto

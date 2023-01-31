@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -6,13 +6,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { ApiClient } from "../../api/ApiClient";
 import IconButton from "@mui/material/IconButton";
 import { useSnackbar } from "notistack";
 import CurrentUserAvatar from "../../components/CurrentUserAvatar";
 import { RootState } from "../../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { setAvatar } from "../../redux/avatarSlice";
+import { api } from "../../redux/api";
 
 type Props = {};
 
@@ -21,9 +21,22 @@ const AvatarSettings = (props: Props) => {
     const dispatch = useDispatch();
     const { enqueueSnackbar } = useSnackbar();
 
-    const [uploadInProgress, setUploadInProgress] = useState(false);
-    const [deleteInProgress, setDeleteInProgress] = useState(false);
     const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+
+    const [
+        uploadAvatarAsync,
+        {
+            isLoading: isAvatarUploading,
+            isSuccess: isAvatarUploadSuccess,
+            isError: isAvatarUploadError,
+            data: uploadAvatarResponse,
+        },
+    ] = api.usePostApiAvatarMutation();
+
+    const [
+        deleteAvatarAsync,
+        { isLoading: isDeletingAvatar, isSuccess: isDeleteAvatarSuccess, isError: isDeleteAvatarError },
+    ] = api.useDeleteApiAvatarMutation();
 
     const handleDeleteClick = () => {
         setDeleteDialogVisible(true);
@@ -35,32 +48,27 @@ const AvatarSettings = (props: Props) => {
 
     const handleAvatarUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         try {
-            setUploadInProgress(true);
+            // https://github.com/reduxjs/redux-toolkit/issues/3063
             const file = e.target.files?.[0];
-            const api = new ApiClient();
-            const response = await api.avatar.postApiAvatar({
-                file: file,
-            });
+            const response = await uploadAvatarAsync({
+                file,
+            }).unwrap();
+
             dispatch(setAvatar(response));
             enqueueSnackbar("Avatar has been successfully changed", { variant: "success" });
         } catch (err) {
             enqueueSnackbar("Could not upload avatar", { variant: "error" });
-        } finally {
-            setUploadInProgress(false);
         }
     };
 
     const handleAvatarDelete = async () => {
         try {
-            setDeleteInProgress(true);
-            const api = new ApiClient();
-            await api.avatar.deleteApiAvatar();
+            await deleteAvatarAsync();
             dispatch(setAvatar(""));
             enqueueSnackbar("Avatar has been successfully deleted", { variant: "success" });
         } catch (err) {
             enqueueSnackbar("Could not delete avatar", { variant: "error" });
         } finally {
-            setDeleteInProgress(false);
             handleDeleteDialogClose();
         }
     };
@@ -71,11 +79,15 @@ const AvatarSettings = (props: Props) => {
             <Stack direction="row" alignItems="center" spacing={2}>
                 <CurrentUserAvatar width={48} height={48} />
 
-                <IconButton disabled={uploadInProgress} color="primary" component="label">
+                <IconButton disabled={isAvatarUploading} color="primary" component="label">
                     <input hidden accept="image/*" type="file" onChange={handleAvatarUpload} />
-                    {uploadInProgress ? <CircularProgress size={24} /> : <CloudUploadIcon />}
+                    {isAvatarUploading ? <CircularProgress size={24} /> : <CloudUploadIcon />}
                 </IconButton>
-                <IconButton disabled={uploadInProgress || avatar.length == 0} color="error" onClick={handleDeleteClick}>
+                <IconButton
+                    disabled={isAvatarUploading || avatar == undefined || avatar?.length == 0}
+                    color="error"
+                    onClick={handleDeleteClick}
+                >
                     <DeleteIcon />
                 </IconButton>
             </Stack>
@@ -89,12 +101,12 @@ const AvatarSettings = (props: Props) => {
                         onClick={handleAvatarDelete}
                         color="error"
                         endIcon={<DeleteIcon />}
-                        loading={deleteInProgress}
+                        loading={isDeletingAvatar}
                         loadingPosition="end"
                     >
                         Delete
                     </LoadingButton>
-                    <Button onClick={handleDeleteDialogClose} disabled={deleteInProgress}>
+                    <Button onClick={handleDeleteDialogClose} disabled={isDeletingAvatar}>
                         Cancel
                     </Button>
                 </DialogActions>

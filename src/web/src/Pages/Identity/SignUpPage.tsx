@@ -8,12 +8,11 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import Typography from "@mui/material/Typography";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { ApiClient } from "../../api/ApiClient";
-import { ApiError, RegistrationResponseDto } from "../../api/generated";
+import { api, RegistrationResponseDto } from "../../redux/api";
+import { isErrorWithMessage, isFetchBaseQueryError } from "../../misc/errorHelpers";
 
 export default function SignUpPage() {
     const [errors, setErrors] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const [userName, setUserName] = useState("");
@@ -22,34 +21,35 @@ export default function SignUpPage() {
     const [passwordMatch, setPasswordMatch] = useState(true);
     const [canSignUp, setCanSignUp] = useState(false);
 
+    const [signUpAsync, { isLoading, isError, isSuccess, error }] = api.usePostApiIdentitySignupMutation();
+
     useEffect(() => {
         const isPasswordValid = password == passwordRepeat;
         setPasswordMatch(isPasswordValid);
         setCanSignUp(userName.length > 0 && password.length > 0 && isPasswordValid);
     }, [userName, password, passwordRepeat]);
 
-    const error = errors.length > 0;
-
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setLoading(true);
 
         try {
-            const api = new ApiClient();
-            let response: RegistrationResponseDto = await api.identity.postApiIdentitySignup({
+            const response = await signUpAsync({
                 userName: userName,
                 password: password,
-            });
-            if (response.success) {
-                navigate("/signin", { state: { registrationSuccess: true } });
-            } else {
-                setErrors(["Unknown error"]);
+            }).unwrap();
+
+            navigate("/signin", { state: { registrationSuccess: true } });
+        } catch (err) {
+            if (isFetchBaseQueryError(err)) {
+                const responseError = err.data as RegistrationResponseDto;
+                if (responseError) {
+                    setErrors(responseError.errors?.map((err) => err.description || "") || []);
+                } else {
+                    setErrors(["Unknown error, please try again"]);
+                }
+            } else if (isErrorWithMessage(err)) {
+                setErrors([err.message]);
             }
-        } catch (err: any) {
-            let exception = err as ApiError;
-            setErrors([exception.message]);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -78,7 +78,7 @@ export default function SignUpPage() {
                         label="User Name"
                         name="userName"
                         autoComplete="off"
-                        disabled={loading}
+                        disabled={isLoading}
                         onChange={(event) => {
                             setUserName(event.target.value);
                         }}
@@ -91,7 +91,7 @@ export default function SignUpPage() {
                         name="password"
                         label="Password"
                         type="password"
-                        disabled={loading}
+                        disabled={isLoading}
                         onChange={(event) => {
                             setPassword(event.target.value);
                         }}
@@ -105,7 +105,7 @@ export default function SignUpPage() {
                         name="password"
                         label="Repeat password"
                         type="password"
-                        disabled={loading}
+                        disabled={isLoading}
                         onChange={(event) => {
                             setPasswordRepeat(event.target.value);
                         }}
@@ -115,7 +115,7 @@ export default function SignUpPage() {
                         fullWidth
                         endIcon={<SendIcon />}
                         loadingPosition="end"
-                        loading={loading}
+                        loading={isLoading}
                         variant="contained"
                         disabled={!canSignUp}
                         sx={{ mt: 3, mb: 2 }}
@@ -124,7 +124,7 @@ export default function SignUpPage() {
                     </LoadingButton>
                     <Grid container>
                         <Grid item xs>
-                            <Button component={Link} to={"/signin"} disabled={loading}>
+                            <Button component={Link} to={"/signin"} disabled={isLoading}>
                                 Already have account? Sign In
                             </Button>
                         </Grid>

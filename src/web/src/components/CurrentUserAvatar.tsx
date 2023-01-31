@@ -9,10 +9,18 @@ type CurrentUserAvatarProps = {
 };
 
 const CurrentUserAvatar = (props: CurrentUserAvatarProps) => {
-    const { userId, userName } = useAuth();
+    const { user } = useAuth();
     const { avatar } = useSelector((state: RootState) => state.avatar);
 
-    return <UserAvatar avatar={avatar} userId={userId} userName={userName} width={props.width} height={props.height} />;
+    return (
+        <UserAvatar
+            avatar={avatar}
+            userId={user!.userId}
+            userName={user!.userName}
+            width={props.width}
+            height={props.height}
+        />
+    );
 };
 
 export default CurrentUserAvatar;

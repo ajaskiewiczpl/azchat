@@ -1,7 +1,7 @@
 import Avatar from "@mui/material/Avatar";
 import deepOrange from "@mui/material/colors/deepOrange";
 import React, { useEffect, useState } from "react";
-import { ApiClient } from "../api/ApiClient";
+import { api } from "../redux/api";
 
 export type UserAvatarProps = {
     userId: string;
@@ -12,17 +12,14 @@ export type UserAvatarProps = {
 };
 
 const UserAvatar = (props: UserAvatarProps) => {
-    const [avatarData, setAvatarData] = useState("");
+    const [fetchAvatar, setFetchAvatar] = useState(true);
+    const { data } = api.useGetApiAvatarByUserIdQuery(props.userId, {
+        skip: !fetchAvatar,
+    });
 
     useEffect(() => {
-        const loadAvatar = async () => {
-            const api = new ApiClient();
-            const avatarBase64 = await api.avatar.getApiAvatar(props.userId);
-            setAvatarData(avatarBase64);
-        };
-
         if (props.avatar == undefined) {
-            loadAvatar();
+            setFetchAvatar(true);
         }
     }, []);
 
@@ -30,7 +27,7 @@ const UserAvatar = (props: UserAvatarProps) => {
         <Avatar
             sx={{ width: props.width, height: props.height, bgcolor: deepOrange[500] }}
             alt={props.userName}
-            src={avatarData || props.avatar}
+            src={data?.avatarData || props.avatar}
         >
             {props.userName.substring(0, 1).toUpperCase()}
         </Avatar>

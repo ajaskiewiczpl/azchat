@@ -5,13 +5,14 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import { Box, Container } from "@mui/system";
-import { ApiClient } from "../../api/ApiClient";
-import { ApiError } from "../../api/generated/core/ApiError";
-import { AuthenticationResponseDto, OpenAPI } from "../../api/generated";
-import useAuth from "../../hooks/useAuth";
+import { api } from "../../redux/api";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../redux/authSlice";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
 
 const SignInPage = () => {
-    const { persistToken } = useAuth();
+    const [signIn, { isLoading, isError }] = api.usePostApiIdentitySigninMutation();
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || "/";
@@ -25,9 +26,6 @@ const SignInPage = () => {
     }
 
     const [errorMessage, setErrorMessage] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const error = errorMessage.length > 0;
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -35,23 +33,24 @@ const SignInPage = () => {
         const data = new FormData(event.currentTarget);
         const userName = data.get("userName")?.toString() || "";
         const password = data.get("password")?.toString() || "";
-        try {
-            setLoading(true);
-            setErrorMessage("");
 
-            const api = new ApiClient();
-            api.request.config.WITH_CREDENTIALS = true;
-            let response: AuthenticationResponseDto = await api.identity.postApiIdentitySignin({
+        try {
+            const response = await signIn({
                 userName: userName,
                 password: password,
-            });
-            const token = response.token || "";
-            persistToken(token);
+            }).unwrap();
+
+            dispatch(
+                setToken({
+                    token: response.token || "",
+                })
+            );
+
             navigate(from, { replace: true });
-        } catch (err: any) {
-            let exception = err as ApiError;
+        } catch (err) {
+            const ex = err as FetchBaseQueryError;
             let msg;
-            switch (exception.status) {
+            switch (ex.status) {
                 case 401:
                     msg = "Incorrect user name or password";
                     break;
@@ -63,8 +62,6 @@ const SignInPage = () => {
                     break;
             }
             setErrorMessage(msg);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -82,7 +79,7 @@ const SignInPage = () => {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1">Sign In</Typography>
-                <Alert severity="error" sx={{ mt: 2, display: error ? "flex" : "none" }}>
+                <Alert severity="error" sx={{ mt: 2, display: isError ? "flex" : "none" }}>
                     {errorMessage}
                 </Alert>
                 {location.state?.registrationSuccess ? (
@@ -100,7 +97,7 @@ const SignInPage = () => {
                         label="User Name"
                         name="userName"
                         autoComplete="off"
-                        disabled={loading}
+                        disabled={isLoading}
                         defaultValue={defaultUserName}
                         autoFocus
                     />
@@ -111,7 +108,7 @@ const SignInPage = () => {
                         name="password"
                         label="Password"
                         type="password"
-                        disabled={loading}
+                        disabled={isLoading}
                         defaultValue={defaultPassword}
                         autoComplete="current-password"
                     />
@@ -120,7 +117,7 @@ const SignInPage = () => {
                         fullWidth
                         endIcon={<SendIcon />}
                         loadingPosition="end"
-                        loading={loading}
+                        loading={isLoading}
                         variant="contained"
                         sx={{ mt: 3, mb: 2 }}
                     >
@@ -128,7 +125,7 @@ const SignInPage = () => {
                     </LoadingButton>
                     <Grid container>
                         <Grid item xs>
-                            <Button component={Link} to={"/signup"} disabled={loading}>
+                            <Button component={Link} to={"/signup"} disabled={isLoading}>
                                 Don't have an account? Sign Up
                             </Button>
                         </Grid>

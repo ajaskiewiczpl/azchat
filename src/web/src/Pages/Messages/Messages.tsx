@@ -5,38 +5,46 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
-import PersonIcon from "@mui/icons-material/Person";
 import ListItemText from "@mui/material/ListItemText";
-import { Alert, Badge, Container, Grid, makeStyles, TextField, Typography } from "@mui/material";
+import { Alert, Badge, Container, Grid, Typography } from "@mui/material";
 import Conversation from "./Conversation";
 import { useEffect, useRef, useState } from "react";
-import { ApiError, FriendDto, MessageDto } from "../../api/generated";
-import { ApiClient } from "../../api/ApiClient";
 import { ChatHubService } from "../../api/ChatHubService";
 import UserAvatar from "../../components/UserAvatar";
+import { api, FriendDto, MessageDto } from "../../redux/api";
+import useAuthToken from "../../hooks/useAuthToken";
 
 type Props = {};
 
 const Messages = (props: Props) => {
-    const navigate = useNavigate();
-    const [connection, setConnection] = useState<ChatHubService | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { isLoading, isFetching, isSuccess, data, isError, error } = api.useGetApiChatFriendsQuery();
+
+    const { authToken } = useAuthToken();
+
+    const [hubConnection, setHubConnection] = useState<ChatHubService | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
     const [friends, setFriends] = useState<FriendDto[]>([]);
     const [selectedUserId, setSelectedUserId] = useState("");
     const selectedUserIdRef = useRef(selectedUserId); // this is to avoid capturing of "selectedUserId" value in "onMessage" function closure
 
-    useEffect(() => {
-        load();
-    }, []);
+    const isLoadingFriends = isLoading || isFetching;
 
     useEffect(() => {
-        connection?.onMessage(onMessage);
+        if (isSuccess) {
+            setFriends(data);
+            connectToHub();
+        } else if (isError) {
+            setErrorMessage(`Could not load users`);
+        }
+    }, [isSuccess, isError]);
+
+    useEffect(() => {
+        hubConnection?.onMessage(onMessage);
 
         return () => {
-            connection ? connection.disconnect() : null;
+            hubConnection ? hubConnection.disconnect() : null;
         };
-    }, [connection]);
+    }, [hubConnection]);
 
     const onMessage = (message: MessageDto) => {
         const updateFriend = (friend: FriendDto, message: MessageDto): FriendDto => {
@@ -73,30 +81,11 @@ const Messages = (props: Props) => {
 
     const connectToHub = async () => {
         try {
-            const chatHubService = new ChatHubService();
+            const chatHubService = new ChatHubService(authToken);
             await chatHubService.connect();
-            setConnection(chatHubService);
+            setHubConnection(chatHubService);
         } catch (err) {
             setErrorMessage("Could not connect to server");
-        }
-    };
-
-    const load = async () => {
-        const api = new ApiClient();
-        try {
-            const response = await api.chat.getApiChatFriends();
-            setFriends(response);
-            connectToHub();
-            // navigate(`/messages/${response[0].id}`);
-        } catch (err) {
-            const ex = err as ApiError;
-            if (ex) {
-                setErrorMessage(ex.message);
-            } else {
-                setErrorMessage("Unknown error, please try again");
-            }
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -173,7 +162,7 @@ const Messages = (props: Props) => {
         );
     };
 
-    return <>{isLoading ? renderLoading() : errorMessage.length > 0 ? renderError() : renderUserList()}</>;
+    return <>{isLoadingFriends ? renderLoading() : errorMessage.length > 0 ? renderError() : renderUserList()}</>;
 };
 
 export default Messages;
