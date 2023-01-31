@@ -12,11 +12,14 @@ import { useEffect, useRef, useState } from "react";
 import { ChatHubService } from "../../api/ChatHubService";
 import UserAvatar from "../../components/UserAvatar";
 import { api, FriendDto, MessageDto } from "../../redux/api";
+import useAuthToken from "../../hooks/useAuthToken";
 
 type Props = {};
 
 const Messages = (props: Props) => {
     const { isLoading, isFetching, isSuccess, data, isError, error } = api.useGetApiChatFriendsQuery();
+
+    const { authToken } = useAuthToken();
 
     const [hubConnection, setHubConnection] = useState<ChatHubService | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
@@ -31,7 +34,7 @@ const Messages = (props: Props) => {
             setFriends(data);
             connectToHub();
         } else if (isError) {
-            setErrorMessage("Could not load users");
+            setErrorMessage(`Could not load users`);
         }
     }, [isSuccess, isError]);
 
@@ -78,7 +81,7 @@ const Messages = (props: Props) => {
 
     const connectToHub = async () => {
         try {
-            const chatHubService = new ChatHubService();
+            const chatHubService = new ChatHubService(authToken);
             await chatHubService.connect();
             setHubConnection(chatHubService);
         } catch (err) {

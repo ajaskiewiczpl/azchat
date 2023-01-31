@@ -25,10 +25,13 @@ import WarningIcon from "@mui/icons-material/Warning";
 import { LoadingButton } from "@mui/lab";
 import { AdminHubService } from "../../api/AdminHubService";
 import { api, UserDto } from "../../redux/api";
+import useAuthToken from "../../hooks/useAuthToken";
 
 type Props = {};
 
 const Users = (props: Props) => {
+    const { authToken } = useAuthToken();
+
     const columns: GridColDef[] = [
         { field: "id", headerName: "ID", width: 300 },
         {
@@ -128,7 +131,7 @@ const Users = (props: Props) => {
         let hubService: AdminHubService | null = null;
 
         try {
-            hubService = new AdminHubService();
+            hubService = new AdminHubService(authToken);
             const hubConnectionId = await hubService.connect();
             hubService?.onUsersDeleteProgress((progress) => {
                 setUsersDeleteProgressValue(progress);

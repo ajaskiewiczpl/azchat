@@ -1,4 +1,5 @@
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import axios from "axios";
 import { baseUrl } from "../app-config";
 
 type OnUsersDeleteProgressCallback = (progress: number) => void;
@@ -6,18 +7,28 @@ type OnUsersDeleteProgressCallback = (progress: number) => void;
 export class AdminHubService {
     private readonly hub: HubConnection;
 
-    constructor() {
+    private authToken: string;
+
+    constructor(initialToken: string) {
         const hubUrl = baseUrl + "/api/hub/admin";
+        this.authToken = initialToken;
         this.hub = new HubConnectionBuilder()
             .withAutomaticReconnect()
             .withUrl(hubUrl, {
                 withCredentials: false,
                 accessTokenFactory: async () => {
-                    // TODO
-                    // const api = new ApiClient();
-                    // await api.chat.getApiChatPing(); // make dummy API call to refresh and store new token in local storage if needed
-                    const token = localStorage.getItem("token") || "";
-                    return token;
+                    const response = await axios.post(
+                        `/api/identity/refreshtoken`,
+                        {
+                            token: this.authToken,
+                        },
+                        {
+                            baseURL: baseUrl,
+                            withCredentials: true,
+                        }
+                    );
+                    this.authToken = response.data.token;
+                    return this.authToken;
                 },
             })
             .build();

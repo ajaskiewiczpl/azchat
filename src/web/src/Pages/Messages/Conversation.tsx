@@ -8,6 +8,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Message from "./Message";
 import { useSnackbar } from "notistack";
 import { api, MessageDto } from "../../redux/api";
+import useAuthToken from "../../hooks/useAuthToken";
 
 type InnerConversationProps = {
     otherUserId: string;
@@ -15,6 +16,7 @@ type InnerConversationProps = {
 
 const InnerConversation = (props: InnerConversationProps) => {
     const { user } = useAuth();
+    const { authToken } = useAuthToken();
     const { enqueueSnackbar } = useSnackbar();
     const [hubConnection, setHubConnection] = useState<ChatHubService | null>(null);
     const [messages, setMessages] = useState<MessageDto[]>([]);
@@ -51,7 +53,7 @@ const InnerConversation = (props: InnerConversationProps) => {
 
         const connect = async () => {
             try {
-                const chatHubService = new ChatHubService();
+                const chatHubService = new ChatHubService(authToken);
                 await chatHubService.connect();
                 setHubConnection(chatHubService);
             } catch (err) {

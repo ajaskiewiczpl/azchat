@@ -40,6 +40,7 @@ const HomePage = (props: Props) => {
         isError: avatarError,
         isSuccess: avatarSuccess,
         data: avatarData,
+        error: avatarErrorData,
     } = api.useGetApiAvatarByUserIdQuery(user!.userId);
 
     useEffect(() => {
