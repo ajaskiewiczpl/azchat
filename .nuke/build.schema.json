@@ -66,6 +66,10 @@
           "type": "string",
           "description": "Root directory during build execution"
         },
+        "Runtime": {
+          "type": "string",
+          "description": "Target runtime - default is portable"
+        },
         "Skip": {
           "type": "array",
           "description": "List of targets to be skipped. Empty list skips all dependencies",

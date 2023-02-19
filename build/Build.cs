@@ -22,6 +22,9 @@ class Build : NukeBuild
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
+    [Parameter("Target runtime - default is portable")]
+    readonly string Runtime = "";
+
     [Solution] readonly Solution Solution;
 
     AbsolutePath SourceDirectory => RootDirectory / "src";
@@ -41,11 +44,13 @@ class Build : NukeBuild
         .Executes(() =>
         {
             DotNetRestore(s => s
+                .SetRuntime(Runtime)
                 .SetProjectFile(Solution));
 
             DotNetPublish(s => s
                 .SetProject(Solution.GetProject("AZChat"))
                 .SetConfiguration(Configuration)
+                .SetRuntime(Runtime)
                 .SetOutput(ArtifactsDirectory)
                 .EnableNoRestore());
         });

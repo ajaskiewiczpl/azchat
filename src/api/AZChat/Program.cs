@@ -26,6 +26,7 @@ using Microsoft.OpenApi.Models;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Serilog;
+using Serilog.Core;
 
 namespace AZChat
 {
@@ -34,57 +35,55 @@ namespace AZChat
         public static async Task Main(string[] args)
         {
             Console.Title = "AZ Chat";
+            Logger logger = null;
 
             try
             {
-                WebApplicationBuilder builder = GetWebApplicationBuilder(args);
+                WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+                logger = ConfigureLogging(builder.Configuration);
+                ConfigureApplicationBuilder(builder, logger);
                 WebApplication app = builder.Build();
-            
-                ConfigureLogging(app.Configuration);
-            
-                Log.Information("Web app created");
+
+                logger.Information("Web app created");
 
                 await ConfigureApp(app);
-                Log.Information("Web app configured");
+                logger.Information("Web app configured");
 
                 using (var scope = app.Services.CreateScope())
                 {
-                    Log.Information("Applying SQL schema migrations");
+                    logger.Information("Applying SQL schema migrations");
                     AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                     await dbContext.Database.MigrateAsync();
 
-                    Log.Information("Configuring CosmosDb database and container");
+                    logger.Information("Configuring CosmosDb database and container");
                     ICosmosDbService cosmosDbService = scope.ServiceProvider.GetRequiredService<ICosmosDbService>();
                     await cosmosDbService.EnsureCreatedAsync();
 
-                    Log.Information("Configuring blob storage");
+                    logger.Information("Configuring blob storage");
                     IBlobStorageService blobStorageService = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
                     await blobStorageService.EnsureCreatedAsync();
 
-                    Log.Information("Creating admin role and account if not exists");
+                    logger.Information("Creating admin role and account if not exists");
                     IOptions<AdminAccountConfiguration> adminAccountConfig = scope.ServiceProvider.GetRequiredService<IOptions<AdminAccountConfiguration>>();
                     IIdentityService identityService = scope.ServiceProvider.GetRequiredService<IIdentityService>();
                     await identityService.CreateAdminAccountIfNotExistsAsync(adminAccountConfig.Value.UserName, adminAccountConfig.Value.Password);
 
                     // TODO cleanup RefreshTokens
                 }
-                
-                Log.Information("App configured, starting");
+
+                logger.Information("App configured, starting");
 
                 await app.RunAsync();
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Failed to start app");
-                Log.CloseAndFlush();
+                logger?.Fatal(ex, "Failed to start app");
                 throw;
             }
         }
 
-        private static WebApplicationBuilder GetWebApplicationBuilder(string[] args)
+        private static void ConfigureApplicationBuilder(WebApplicationBuilder builder, Logger logger)
         {
-            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
             IConfiguration authConfig = builder.Configuration.GetSection(JwtConfiguration.SectionName);
             builder.Services.Configure<JwtConfiguration>(authConfig);
 
@@ -97,7 +96,7 @@ namespace AZChat
             builder.Services.AddLogging(loggingBuilder =>
             {
                 loggingBuilder.ClearProviders();
-                loggingBuilder.AddSerilog();
+                loggingBuilder.AddSerilog(logger);
             });
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -237,7 +236,6 @@ namespace AZChat
             });
 
             builder.Services.AddSpaStaticFiles(options => options.RootPath = "public");
-            return builder;
         }
 
         private static async Task ConfigureApp(WebApplication app)
@@ -287,9 +285,9 @@ namespace AZChat
             app.MapHub<AdminHub>("/api/hub/admin");
         }
 
-        private static void ConfigureLogging(IConfiguration configuration)
+        private static Logger ConfigureLogging(IConfiguration configuration)
         {
-            Log.Logger = new LoggerConfiguration()
+            return new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
         }
